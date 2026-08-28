@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_side_navigation.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../injection_container.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
@@ -24,30 +27,62 @@ class CustomerDashboardPage extends StatelessWidget {
         backgroundColor: AppColors.bg,
         body: BlocBuilder<DashboardCubit, DashboardState>(
           builder: (context, state) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, state),
-                  const SizedBox(height: 24),
-                  _buildTabs(context, state),
-                  const SizedBox(height: 24),
-                  if (state.isLoading && 
-                      state.dashboardData == null && 
-                      state.tickets == null && 
-                      state.report == null)
-                    const Expanded(child: Center(child: CircularProgressIndicator()))
-                  else if (state.error != null)
-                    Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
-                  else if (state.activeTab == DashboardTab.overview)
-                    _buildOverview(state)
-                  else if (state.activeTab == DashboardTab.complaints)
-                    _buildComplaints(context, state)
-                  else if (state.activeTab == DashboardTab.reports)
-                    _buildReports(state),
-                ],
-              ),
+            final activeCount = state.dashboardData?.metrics.inProgressCount ?? 0;
+            return Row(
+              children: [
+                AppSideNavigation(
+                  brandName: 'Green Sprout',
+                  brandSubtext: 'Customer Portal',
+                  onProfileTap: () => context.push(RouteNames.profileSetup),
+                  onLogoutTap: () => context.go(RouteNames.login),
+                  items: [
+                    NavItem(
+                      icon: Icons.dashboard_outlined,
+                      label: 'Overview',
+                      isActive: state.activeTab == DashboardTab.overview,
+                      onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.overview),
+                    ),
+                    NavItem(
+                      icon: Icons.build_outlined,
+                      label: 'Complaints',
+                      badge: activeCount > 0 ? '$activeCount active' : null,
+                      isActive: state.activeTab == DashboardTab.complaints,
+                      onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.complaints),
+                    ),
+                    NavItem(
+                      icon: Icons.analytics_outlined,
+                      label: 'Reports',
+                      isActive: state.activeTab == DashboardTab.reports,
+                      onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.reports),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(context, state),
+                        const SizedBox(height: 24),
+                        if (state.isLoading && 
+                            state.dashboardData == null && 
+                            state.tickets == null && 
+                            state.report == null)
+                          const Expanded(child: Center(child: CircularProgressIndicator()))
+                        else if (state.error != null)
+                          Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
+                        else if (state.activeTab == DashboardTab.overview)
+                          _buildOverview(state)
+                        else if (state.activeTab == DashboardTab.complaints)
+                          _buildComplaints(context, state)
+                        else if (state.activeTab == DashboardTab.reports)
+                          _buildReports(state),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -199,105 +234,6 @@ class CustomerDashboardPage extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTabs(BuildContext context, DashboardState state) {
-    final activeCount = state.dashboardData?.metrics.inProgressCount ?? 0;
-    
-    return Row(
-      children: [
-        _TabItem(
-          icon: Icons.dashboard_outlined,
-          label: 'Dashboard',
-          isActive: state.activeTab == DashboardTab.overview,
-          onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.overview),
-        ),
-        const SizedBox(width: 12),
-        _TabItem(
-          icon: Icons.build_outlined,
-          label: 'Complaints',
-          badge: '$activeCount active',
-          isActive: state.activeTab == DashboardTab.complaints,
-          onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.complaints),
-        ),
-        const SizedBox(width: 12),
-        _TabItem(
-          icon: Icons.analytics_outlined,
-          label: 'Reports',
-          isActive: state.activeTab == DashboardTab.reports,
-          onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.reports),
-        ),
-      ],
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? badge;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _TabItem({
-    required this.icon,
-    required this.label,
-    this.badge,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.navy900 : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isActive ? AppColors.navy900 : Colors.grey.shade300),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isActive ? Colors.white : AppColors.ink600,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? Colors.white : AppColors.ink600,
-                fontSize: 14,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.bold,
-              ),
-            ),
-            if (badge != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.white.withOpacity(0.2) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  badge!,
-                  style: TextStyle(
-                    color: isActive ? Colors.white : AppColors.ink400,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

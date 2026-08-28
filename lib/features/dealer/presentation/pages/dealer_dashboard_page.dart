@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_side_navigation.dart';
+import '../../../../core/router/route_names.dart';
 import '../bloc/dealer_dashboard_cubit.dart';
 import '../bloc/dealer_dashboard_state.dart';
 import '../widgets/dashboard/dealer_rating_banner.dart';
@@ -9,6 +12,7 @@ import '../widgets/dashboard/dealer_stat_card.dart';
 import '../widgets/tickets/dealer_ticket_detail_view.dart';
 import '../widgets/assign_technician_dialog.dart';
 import '../widgets/dealer_team_view.dart';
+import '../widgets/reports/dealer_performance_report_view.dart';
 import '../../../../injection_container.dart';
 import '../../data/models/dealer_ticket_model.dart';
 import '../widgets/tickets/dealer_ticket_list_sidebar.dart';
@@ -24,37 +28,89 @@ class DealerDashboardPage extends StatelessWidget {
         backgroundColor: AppColors.bg,
         body: BlocBuilder<DealerDashboardCubit, DealerDashboardState>(
           builder: (context, state) {
-            return Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, state),
-                  const SizedBox(height: 24),
-                  _buildTabs(context, state),
-                  const SizedBox(height: 24),
-                  if (state.isLoading)
-                    const Expanded(child: Center(child: CircularProgressIndicator()))
-                  else if (state.error != null)
-                    Expanded(child: Center(child: Text(state.error!)))
-                  else if (state.activeTab == DealerDashboardTab.dashboard)
-                    _buildDashboardOverview(state)
-                  else if (state.activeTab == DealerDashboardTab.serviceRequests)
-                    _buildServiceRequests(context, state)
-                  else if (state.activeTab == DealerDashboardTab.team)
-                    _buildTeamView(state)
-                  else
-                    Expanded(
-                      child: Center(
-                        child: Text('Content for ${state.activeTab.name} coming soon'),
-                      ),
+            return Row(
+              children: [
+                AppSideNavigation(
+                  brandName: 'Green Sprout',
+                  brandSubtext: 'Dealer Workspace',
+                  onProfileTap: () => context.push(RouteNames.profileSetup),
+                  onLogoutTap: () => context.go(RouteNames.login),
+                  items: [
+                    NavItem(
+                      icon: Icons.dashboard_outlined,
+                      label: 'Dashboard',
+                      isActive: state.activeTab == DealerDashboardTab.dashboard,
+                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.dashboard),
                     ),
-                ],
-              ),
+                    NavItem(
+                      icon: Icons.build_outlined,
+                      label: 'Service Requests',
+                      badge: '3',
+                      isActive: state.activeTab == DealerDashboardTab.serviceRequests,
+                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.serviceRequests),
+                    ),
+                    NavItem(
+                      icon: Icons.people_outline,
+                      label: 'Service Team',
+                      badge: '4',
+                      isActive: state.activeTab == DealerDashboardTab.team,
+                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.team),
+                    ),
+                    NavItem(
+                      icon: Icons.analytics_outlined,
+                      label: 'Performance',
+                      isActive: state.activeTab == DealerDashboardTab.reports,
+                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.reports),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(context, state),
+                        const SizedBox(height: 24),
+                        if (state.isLoading)
+                          const Expanded(child: Center(child: CircularProgressIndicator()))
+                        else if (state.error != null)
+                          Expanded(child: Center(child: Text(state.error!)))
+                        else if (state.activeTab == DealerDashboardTab.dashboard)
+                          _buildDashboardOverview(state)
+                        else if (state.activeTab == DealerDashboardTab.serviceRequests)
+                          _buildServiceRequests(context, state)
+                        else if (state.activeTab == DealerDashboardTab.team)
+                          _buildTeamView(state)
+                        else if (state.activeTab == DealerDashboardTab.reports)
+                          _buildPerformanceReport(state)
+                        else
+                          Expanded(
+                            child: Center(
+                              child: Text('Content for ${state.activeTab.name} coming soon'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildPerformanceReport(DealerDashboardState state) {
+    if (state.isReportLoading && state.performanceReport == null) {
+      return const Expanded(child: Center(child: CircularProgressIndicator()));
+    }
+    if (state.performanceReport == null) {
+      return const SizedBox.shrink();
+    }
+    return Expanded(
+      child: DealerPerformanceReportView(report: state.performanceReport!),
     );
   }
 
@@ -143,42 +199,6 @@ class DealerDashboardPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabs(BuildContext context, DealerDashboardState state) {
-    return Row(
-      children: [
-        _TabItem(
-          icon: Icons.description,
-          label: 'Dealer Dashboard',
-          isActive: state.activeTab == DealerDashboardTab.dashboard,
-          onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.dashboard),
-        ),
-        const SizedBox(width: 12),
-        _TabItem(
-          icon: Icons.build_outlined,
-          label: 'Assigned Service Requests',
-          badge: '3',
-          isActive: state.activeTab == DealerDashboardTab.serviceRequests,
-          onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.serviceRequests),
-        ),
-        const SizedBox(width: 12),
-        _TabItem(
-          icon: Icons.people_outline,
-          label: 'Service Person Team',
-          badge: '4',
-          isActive: state.activeTab == DealerDashboardTab.team,
-          onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.team),
-        ),
-        const SizedBox(width: 12),
-        _TabItem(
-          icon: Icons.sentiment_satisfied_alt,
-          label: 'Performance Reports',
-          isActive: state.activeTab == DealerDashboardTab.reports,
-          onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.reports),
         ),
       ],
     );
@@ -422,71 +442,6 @@ class DealerDashboardPage extends StatelessWidget {
       builder: (dialogContext) => BlocProvider.value(
         value: context.read<DealerDashboardCubit>(),
         child: AssignTechnicianDialog(ticket: ticket),
-      ),
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? badge;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _TabItem({
-    required this.icon,
-    required this.label,
-    this.badge,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.navy900 : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isActive ? AppColors.navy900 : Colors.grey.shade300),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18, color: isActive ? Colors.white : AppColors.ink600),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? Colors.white : AppColors.ink600,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-            if (badge != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.white.withValues(alpha: 0.2) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  badge!,
-                  style: TextStyle(
-                    color: isActive ? Colors.white : AppColors.ink400,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

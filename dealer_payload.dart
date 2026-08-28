@@ -144,3 +144,96 @@ dynamic servicePerson = {
     }
   ]
 };
+
+
+// GET /api/v1/dealer/reports/service-requests
+dynamic performance = {
+  "status": "success",
+  "data": {
+    "header": {
+      "title": "Dealer Service Request Report: Green Sprout Agro",
+      "subtitle": "Requests raised by your customer base and how fast your team resolves them",
+      "dealerName": "Green Sprout Agro",
+      "selectedTimeframe": "30D",
+      "availableTimeframes": ["7D", "30D", "90D", "1Y"]
+    },
+
+    "weeklyRequestTrends": {
+      "chartTitle": "Weekly Request Trends",
+      "dataPoints": [
+        { "weekLabel": "Wk1", "count": 14 },
+        { "weekLabel": "Wk2", "count": 11 },
+        { "weekLabel": "Wk3", "count": 18 },
+        { "weekLabel": "Wk4", "count": 16 },
+        { "weekLabel": "Wk5", "count": 22 },
+        { "weekLabel": "Wk6", "count": 20 },
+        { "weekLabel": "Wk7", "count": 25 },
+        { "weekLabel": "Wk8", "count": 23 }
+      ]
+    },
+
+    "requestsByCategory": {
+      "title": "Requests by Category",
+      "maxCount": 20,
+      "categories": [
+        {
+          "id": "repair",
+          "name": "Repair",
+          "subtitle": "Pumps, motors, mechanics",
+          "count": 16,
+          "colorHex": "#3B82F6"
+        },
+        {
+          "id": "installation",
+          "name": "Installation",
+          "subtitle": "X200 units, sensors",
+          "count": 12,
+          "colorHex": "#8B5CF6"
+        },
+        {
+          "id": "maintenance",
+          "name": "Maintenance",
+          "subtitle": "Filters, fertigation valves",
+          "count": 7,
+          "colorHex": "#F59E0B"
+        },
+        {
+          "id": "inspection",
+          "name": "Inspection",
+          "subtitle": "Periodic farm checkups",
+          "count": 2,
+          "colorHex": "#10B981"
+        }
+      ]
+    },
+
+    "requestStatusBreakdown": {
+      "title": "Request Status Breakdown",
+      "totalCount": 37,
+      "totalLabel": "TOTAL",
+      "statuses": [
+        {
+          "id": "closedVerified",
+          "label": "Closed & Verified",
+          "count": 31,
+          "percentage": 62.0,
+          "colorHex": "#10B981"
+        },
+        {
+          "id": "inProgress",
+          "label": "In Progress",
+          "count": 11,
+          "percentage": 22.0,
+          "colorHex": "#3B82F6"
+        },
+        {
+          "id": "onHold",
+          "label": "On Hold / Needs Tech",
+          "count": 8,
+          "percentage": 16.0,
+          "colorHex": "#F59E0B"
+        }
+      ]
+    }
+  }
+};

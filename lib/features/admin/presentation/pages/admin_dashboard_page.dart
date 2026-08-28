@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_side_navigation.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../injection_container.dart';
 import '../bloc/admin_dashboard_cubit.dart';
 import '../bloc/admin_dashboard_state.dart';
@@ -23,42 +26,80 @@ class AdminDashboardPage extends StatelessWidget {
         backgroundColor: AppColors.bg,
         body: BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
           builder: (context, state) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 32),
-                  _buildTabs(context, state),
-                  const SizedBox(height: 32),
-                  if (state.isLoading && 
-                      state.dashboardData == null && 
-                      state.tickets == null &&
-                      state.dealers == null &&
-                      state.reportSummary == null)
-                    const Expanded(child: Center(child: CircularProgressIndicator()))
-                  else if (state.error != null)
-                    Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
-                  else if (state.activeTab == AdminDashboardTab.overview)
-                    _buildOverview(state)
-                  else if (state.activeTab == AdminDashboardTab.serviceRequests)
-                    _buildServiceRequests(context, state)
-                  else if (state.activeTab == AdminDashboardTab.dealerManagement)
-                    _buildDealerManagement(state)
-                  else if (state.activeTab == AdminDashboardTab.reports)
-                    _buildReports(state)
-                  else
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          'Content for ${state.activeTab.name} coming soon',
-                          style: const TextStyle(color: AppColors.ink400),
-                        ),
-                      ),
+            return Row(
+              children: [
+                AppSideNavigation(
+                  brandName: 'Green Sprout',
+                  brandSubtext: 'Super Admin Console',
+                  onProfileTap: () => context.push(RouteNames.profileSetup),
+                  onLogoutTap: () => context.go(RouteNames.login),
+                  items: [
+                    NavItem(
+                      icon: Icons.dashboard_outlined,
+                      label: 'Platform Overview',
+                      isActive: state.activeTab == AdminDashboardTab.overview,
+                      onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.overview),
                     ),
-                ],
-              ),
+                    NavItem(
+                      icon: Icons.build_outlined,
+                      label: 'Service Requests',
+                      badge: '1 new',
+                      isActive: state.activeTab == AdminDashboardTab.serviceRequests,
+                      onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.serviceRequests),
+                    ),
+                    NavItem(
+                      icon: Icons.storefront_outlined,
+                      label: 'Dealers',
+                      badge: '4',
+                      isActive: state.activeTab == AdminDashboardTab.dealerManagement,
+                      onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.dealerManagement),
+                    ),
+                    NavItem(
+                      icon: Icons.analytics_outlined,
+                      label: 'Reports',
+                      isActive: state.activeTab == AdminDashboardTab.reports,
+                      onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.reports),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(context),
+                        const SizedBox(height: 32),
+                        if (state.isLoading && 
+                            state.dashboardData == null && 
+                            state.tickets == null &&
+                            state.dealers == null &&
+                            state.reportSummary == null)
+                          const Expanded(child: Center(child: CircularProgressIndicator()))
+                        else if (state.error != null)
+                          Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
+                        else if (state.activeTab == AdminDashboardTab.overview)
+                          _buildOverview(state)
+                        else if (state.activeTab == AdminDashboardTab.serviceRequests)
+                          _buildServiceRequests(context, state)
+                        else if (state.activeTab == AdminDashboardTab.dealerManagement)
+                          _buildDealerManagement(state)
+                        else if (state.activeTab == AdminDashboardTab.reports)
+                          _buildReports(state)
+                        else
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Content for ${state.activeTab.name} coming soon',
+                                style: const TextStyle(color: AppColors.ink400),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
