@@ -9,8 +9,8 @@ class AdminTicketDetailModel {
 
   factory AdminTicketDetailModel.fromJson(Map<String, dynamic> json) {
     return AdminTicketDetailModel(
-      status: json['status'],
-      data: AdminTicketDetailData.fromJson(json['data']),
+      status: json['status'] ?? 'success',
+      data: AdminTicketDetailData.fromJson(json['data'] ?? {}),
     );
   }
 }
@@ -19,8 +19,8 @@ class AdminTicketDetailData {
   final String ticketId;
   final String ticketNumber;
   final String title;
-  final String description;
-  final String issueCategory;
+  final String? description;
+  final List<String> issueCategory;
   final String priority;
   final String status;
   final String? supportMode;
@@ -28,16 +28,16 @@ class AdminTicketDetailData {
   final String? preferredSlot;
   final DateTime createdAt;
   final AdminTicketCustomerDetail customer;
-  final List<AssignedDealerDetail> assignedDealer;
-  final List<StepperMilestone> stepperMilestones;
-  final List<TimelineEvent> timelineEvents;
+  final List<AdminAssignedDealerDetail> assignedDealer;
+  final List<AdminStepperMilestone> stepperMilestones;
+  final List<AdminTimelineEvent> timelineEvents;
   final List<String> attachedPhotos;
 
   AdminTicketDetailData({
     required this.ticketId,
     required this.ticketNumber,
     required this.title,
-    required this.description,
+    this.description,
     required this.issueCategory,
     required this.priority,
     required this.status,
@@ -54,17 +54,19 @@ class AdminTicketDetailData {
 
   factory AdminTicketDetailData.fromJson(Map<String, dynamic> json) {
     return AdminTicketDetailData(
-      ticketId: json['ticketId'],
-      ticketNumber: json['ticketNumber'],
-      title: json['title'],
+      ticketId: json['ticketId'] ?? '',
+      ticketNumber: json['ticketNumber'] ?? '',
+      title: json['title'] ?? '',
       description: json['description'],
-      issueCategory: json['issueCategory'],
-      priority: json['priority'],
-      status: json['status'],
+      issueCategory: List<String>.from(json['issueCategory'] ?? []),
+      priority: json['priority'] ?? '',
+      status: json['status'] ?? '',
       supportMode: json['supportMode'],
-      siteLocation: json['siteLocation'],
+      siteLocation: json['siteLocation'] ?? '',
       preferredSlot: json['preferredSlot'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt']) 
+          : DateTime.now(),
       customer: json['customer'] != null 
           ? AdminTicketCustomerDetail.fromJson(json['customer'])
           : AdminTicketCustomerDetail(
@@ -74,15 +76,15 @@ class AdminTicketDetailData {
               siteLocation: json['siteLocation'] ?? '',
             ),
       assignedDealer: (json['assignedDealer'] as List?)
-              ?.map((i) => AssignedDealerDetail.fromJson(i))
+              ?.map((i) => AdminAssignedDealerDetail.fromJson(i))
               .toList() ??
           [],
       stepperMilestones: (json['stepperMilestones'] as List?)
-              ?.map((i) => StepperMilestone.fromJson(i))
+              ?.map((i) => AdminStepperMilestone.fromJson(i))
               .toList() ??
           [],
       timelineEvents: (json['timelineEvents'] as List?)
-              ?.map((i) => TimelineEvent.fromJson(i))
+              ?.map((i) => AdminTimelineEvent.fromJson(i))
               .toList() ??
           [],
       attachedPhotos: List<String>.from(json['attachedPhotos'] ?? []),
@@ -105,47 +107,47 @@ class AdminTicketCustomerDetail {
 
   factory AdminTicketCustomerDetail.fromJson(Map<String, dynamic> json) {
     return AdminTicketCustomerDetail(
-      customerId: json['customerId'],
-      name: json['name'],
-      phone: json['phone'],
-      siteLocation: json['siteLocation'],
+      customerId: json['customerId'] ?? '',
+      name: json['name'] ?? '',
+      phone: json['phone'] ?? '',
+      siteLocation: json['siteLocation'] ?? '',
     );
   }
 }
 
-class AssignedDealerDetail {
+class AdminAssignedDealerDetail {
   final String dealerId;
   final String name;
   final String phone;
-  final String email;
-  final String region;
-  final List<AssignedTechnicianDetail> assignedTechnician;
+  final String? email;
+  final String? region;
+  final List<AdminAssignedTechnicianDetail> assignedTechnician;
 
-  AssignedDealerDetail({
+  AdminAssignedDealerDetail({
     required this.dealerId,
     required this.name,
     required this.phone,
-    required this.email,
-    required this.region,
+    this.email,
+    this.region,
     required this.assignedTechnician,
   });
 
-  factory AssignedDealerDetail.fromJson(Map<String, dynamic> json) {
-    return AssignedDealerDetail(
-      dealerId: json['dealerId'],
-      name: json['name'],
-      phone: json['phone'],
+  factory AdminAssignedDealerDetail.fromJson(Map<String, dynamic> json) {
+    return AdminAssignedDealerDetail(
+      dealerId: json['dealerId'] ?? '',
+      name: json['name'] ?? '',
+      phone: json['phone'] ?? '',
       email: json['email'],
       region: json['region'],
       assignedTechnician: (json['assignedTechnician'] as List?)
-              ?.map((i) => AssignedTechnicianDetail.fromJson(i))
+              ?.map((i) => AdminAssignedTechnicianDetail.fromJson(i))
               .toList() ??
           [],
     );
   }
 }
 
-class AssignedTechnicianDetail {
+class AdminAssignedTechnicianDetail {
   final String technicianId;
   final String name;
   final String phone;
@@ -153,8 +155,9 @@ class AssignedTechnicianDetail {
   final int totalResolved;
   final String travelDistance;
   final String estimatedEta;
+  final String? status;
 
-  AssignedTechnicianDetail({
+  AdminAssignedTechnicianDetail({
     required this.technicianId,
     required this.name,
     required this.phone,
@@ -162,54 +165,56 @@ class AssignedTechnicianDetail {
     required this.totalResolved,
     required this.travelDistance,
     required this.estimatedEta,
+    this.status,
   });
 
-  factory AssignedTechnicianDetail.fromJson(Map<String, dynamic> json) {
-    return AssignedTechnicianDetail(
-      technicianId: json['technicianId'],
-      name: json['name'],
-      phone: json['phone'],
-      rating: (json['rating'] as num).toDouble(),
-      totalResolved: json['totalResolved'] as int,
-      travelDistance: json['travelDistance'],
-      estimatedEta: json['estimatedEta'],
+  factory AdminAssignedTechnicianDetail.fromJson(Map<String, dynamic> json) {
+    return AdminAssignedTechnicianDetail(
+      technicianId: json['technicianId'] ?? '',
+      name: json['name'] ?? '',
+      phone: json['phone'] ?? '',
+      rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
+      totalResolved: json['totalResolved'] ?? 0,
+      travelDistance: json['travelDistance'] ?? '4.2 km',
+      estimatedEta: json['estimatedEta'] ?? '12 mins',
+      status: json['status'] ?? 'On job',
     );
   }
 }
 
-class StepperMilestone {
+class AdminStepperMilestone {
   final int stepOrder;
   final String key;
   final String title;
-  final String description;
+  final String? description;
   final String status;
   final String? updatedAt;
   final String? updatedBy;
 
-  StepperMilestone({
+  AdminStepperMilestone({
     required this.stepOrder,
     required this.key,
     required this.title,
-    required this.description,
+    this.description,
     required this.status,
     this.updatedAt,
     this.updatedBy,
   });
 
-  factory StepperMilestone.fromJson(Map<String, dynamic> json) {
-    return StepperMilestone(
-      stepOrder: json['stepOrder'],
-      key: json['key'],
-      title: json['title'],
+  factory AdminStepperMilestone.fromJson(Map<String, dynamic> json) {
+    return AdminStepperMilestone(
+      stepOrder: json['stepOrder'] ?? 0,
+      key: json['key'] ?? '',
+      title: json['title'] ?? '',
       description: json['description'],
-      status: json['status'],
+      status: json['status'] ?? 'pending',
       updatedAt: json['updatedAt'],
       updatedBy: json['updatedBy'],
     );
   }
 }
 
-class TimelineEvent {
+class AdminTimelineEvent {
   final String id;
   final String timestamp;
   final String title;
@@ -218,7 +223,7 @@ class TimelineEvent {
   final String actorRole;
   final String badgeType;
 
-  TimelineEvent({
+  AdminTimelineEvent({
     required this.id,
     required this.timestamp,
     required this.title,
@@ -228,15 +233,15 @@ class TimelineEvent {
     required this.badgeType,
   });
 
-  factory TimelineEvent.fromJson(Map<String, dynamic> json) {
-    return TimelineEvent(
-      id: json['id'],
-      timestamp: json['timestamp'],
-      title: json['title'],
-      description: json['description'],
-      actor: json['actor'],
-      actorRole: json['actorRole'],
-      badgeType: json['badgeType'],
+  factory AdminTimelineEvent.fromJson(Map<String, dynamic> json) {
+    return AdminTimelineEvent(
+      id: json['id'] ?? '',
+      timestamp: json['timestamp'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      actor: json['actor'] ?? '',
+      actorRole: json['actorRole'] ?? '',
+      badgeType: json['badgeType'] ?? '',
     );
   }
 }

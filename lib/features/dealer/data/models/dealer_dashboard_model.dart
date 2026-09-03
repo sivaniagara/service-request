@@ -1,16 +1,19 @@
 import 'package:equatable/equatable.dart';
+import 'dealer_technician_model.dart';
 
 class DealerDashboardData extends Equatable {
   final DealerProfile profile;
   final DealerMetrics metrics;
   final List<UrgentTicket> urgentActionQueue;
   final TechnicianSummary technicianSummary;
+  final List<DealerTechnician> technicians;
 
   const DealerDashboardData({
     required this.profile,
     required this.metrics,
     required this.urgentActionQueue,
     required this.technicianSummary,
+    required this.technicians,
   });
 
   factory DealerDashboardData.fromJson(Map<String, dynamic> json) {
@@ -21,28 +24,27 @@ class DealerDashboardData extends Equatable {
           .map((e) => UrgentTicket.fromJson(e))
           .toList(),
       technicianSummary: TechnicianSummary.fromJson(json['technicianSummary']),
+      technicians: (json['technicians'] as List)
+          .map((e) => DealerTechnician.fromJson(e))
+          .toList(),
     );
   }
 
   @override
-  List<Object?> get props => [profile, metrics, urgentActionQueue, technicianSummary];
+  List<Object?> get props => [profile, metrics, urgentActionQueue, technicianSummary, technicians];
 }
 
 class DealerProfile extends Equatable {
   final String dealerId;
-  final String dealerCode;
   final String name;
   final String region;
-  final String officeAddress;
   final String phone;
   final double rating;
 
   const DealerProfile({
     required this.dealerId,
-    required this.dealerCode,
     required this.name,
     required this.region,
-    required this.officeAddress,
     required this.phone,
     required this.rating,
   });
@@ -50,17 +52,15 @@ class DealerProfile extends Equatable {
   factory DealerProfile.fromJson(Map<String, dynamic> json) {
     return DealerProfile(
       dealerId: json['dealerId'],
-      dealerCode: json['dealerCode'],
       name: json['name'],
       region: json['region'],
-      officeAddress: json['officeAddress'],
       phone: json['phone'],
       rating: (json['rating'] as num).toDouble(),
     );
   }
 
   @override
-  List<Object?> get props => [dealerId, dealerCode, name, region, officeAddress, phone, rating];
+  List<Object?> get props => [dealerId, name, region, phone, rating];
 }
 
 class DealerMetrics extends Equatable {
@@ -113,8 +113,7 @@ class DealerMetrics extends Equatable {
 class UrgentTicket extends Equatable {
   final String ticketId;
   final String ticketNumber;
-  final String title;
-  final String category;
+  final List<String> issueCategory;
   final String priority;
   final String status;
   final String customerName;
@@ -125,8 +124,7 @@ class UrgentTicket extends Equatable {
   const UrgentTicket({
     required this.ticketId,
     required this.ticketNumber,
-    required this.title,
-    required this.category,
+    required this.issueCategory,
     required this.priority,
     required this.status,
     required this.customerName,
@@ -139,8 +137,7 @@ class UrgentTicket extends Equatable {
     return UrgentTicket(
       ticketId: json['ticketId'],
       ticketNumber: json['ticketNumber'],
-      title: json['title'],
-      category: json['category'],
+      issueCategory: List<String>.from(json['issueCategory']),
       priority: json['priority'],
       status: json['status'],
       customerName: json['customerName'],
@@ -154,8 +151,7 @@ class UrgentTicket extends Equatable {
   List<Object?> get props => [
         ticketId,
         ticketNumber,
-        title,
-        category,
+        issueCategory,
         priority,
         status,
         customerName,

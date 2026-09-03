@@ -112,7 +112,6 @@ class RegionalDistribution {
 class UrgentAttentionTicket {
   final String ticketId;
   final String ticketNumber;
-  final String title;
   final String customerName;
   final String siteLocation;
   final String priority;
@@ -120,16 +119,17 @@ class UrgentAttentionTicket {
   final double ageInHours;
   final double? slaBreachInHours;
   final String? escalationReason;
+  final List<String> issueCategory;
 
   UrgentAttentionTicket({
     required this.ticketId,
     required this.ticketNumber,
-    required this.title,
     required this.customerName,
     required this.siteLocation,
     required this.priority,
     required this.status,
     required this.ageInHours,
+    required this.issueCategory,
     this.slaBreachInHours,
     this.escalationReason,
   });
@@ -138,7 +138,6 @@ class UrgentAttentionTicket {
     return UrgentAttentionTicket(
       ticketId: json['ticketId'],
       ticketNumber: json['ticketNumber'],
-      title: json['title'],
       customerName: json['customerName'],
       siteLocation: json['siteLocation'],
       priority: json['priority'],
@@ -146,6 +145,7 @@ class UrgentAttentionTicket {
       ageInHours: json['ageInHours'].toDouble(),
       slaBreachInHours: json['slaBreachInHours']?.toDouble(),
       escalationReason: json['escalationReason'],
+      issueCategory: List<String>.from(json['issueCategory']),
     );
   }
 }

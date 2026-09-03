@@ -12,6 +12,8 @@ abstract class AdminDashboardRepository {
   Future<AdminDealerModel> getAdminDealers();
   Future<AdminReportSummaryModel> getReportSummary();
   Future<AdminSlaComplianceModel> getSlaCompliance();
+  Future<void> addDealer(Map<String, dynamic> data);
+  Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions);
 }
 
 class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
@@ -47,5 +49,15 @@ class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
   @override
   Future<AdminSlaComplianceModel> getSlaCompliance() async {
     return await remoteDataSource.getSlaCompliance();
+  }
+
+  @override
+  Future<void> addDealer(Map<String, dynamic> data) async {
+    await remoteDataSource.addDealer(data);
+  }
+
+  @override
+  Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions) async {
+    await remoteDataSource.assignDealer(ticketId, dealerIds, instructions);
   }
 }

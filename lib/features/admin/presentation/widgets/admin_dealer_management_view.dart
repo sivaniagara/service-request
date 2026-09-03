@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_dealer_model.dart';
+import '../bloc/admin_dashboard_cubit.dart';
 import 'admin_stat_card.dart';
 import 'add_dealer_dialog.dart';
+import 'package:flutter/material.dart';
 
 class AdminDealerManagementView extends StatelessWidget {
   final AdminDealerModel dealers;
@@ -25,12 +28,17 @@ class AdminDealerManagementView extends StatelessWidget {
   }
 
   Widget _buildSummaryCards() {
+    final totalDealers = dealers.summary?.totalDealers ?? dealers.data.length;
+    final totalTechnicians = dealers.summary?.totalTechnicians ?? 0;
+    final avgRating = dealers.summary?.avgDealerRating ?? 
+        (dealers.data.isEmpty ? 0.0 : dealers.data.map((d) => d.performance.rating).reduce((a, b) => a + b) / dealers.data.length);
+
     return Row(
       children: [
         Expanded(
           child: AdminStatCard(
             title: 'Total Dealers',
-            value: dealers.summary.totalDealers.toString(),
+            value: totalDealers.toString(),
             trend: 'Authorized partners',
             trendColor: Colors.purple,
             icon: Icons.storefront_outlined,
@@ -42,7 +50,7 @@ class AdminDealerManagementView extends StatelessWidget {
         Expanded(
           child: AdminStatCard(
             title: 'Total Service Technicians',
-            value: dealers.summary.totalTechnicians.toString(),
+            value: totalTechnicians > 0 ? totalTechnicians.toString() : 'N/A',
             trend: 'Managed under dealers',
             trendColor: Colors.orange,
             icon: Icons.people_outline,
@@ -54,8 +62,8 @@ class AdminDealerManagementView extends StatelessWidget {
         Expanded(
           child: AdminStatCard(
             title: 'Requests Handled',
-            value: '312',
-            trend: 'Total lifetime volume',
+            value: dealers.data.map((d) => d.performance.totalTicketsResolved).fold(0, (a, b) => a + b).toString(),
+            trend: 'Total platform volume',
             trendColor: Colors.blue,
             icon: Icons.build_circle_outlined,
             iconColor: Colors.blue.shade300,
@@ -66,8 +74,8 @@ class AdminDealerManagementView extends StatelessWidget {
         Expanded(
           child: AdminStatCard(
             title: 'Avg Satisfaction',
-            value: '${dealers.summary.avgDealerRating} ★',
-            trend: 'Consistently high SLA',
+            value: '${avgRating.toStringAsFixed(1)} ★',
+            trend: 'Platform-wide rating',
             trendColor: Colors.green,
             icon: Icons.sentiment_satisfied_alt,
             iconColor: Colors.teal.shade300,
@@ -89,7 +97,7 @@ class AdminDealerManagementView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -99,15 +107,15 @@ class AdminDealerManagementView extends StatelessWidget {
                     Text(
                       'All Registered Dealers',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: AppColors.navy900,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: 2),
                     Text(
-                      'Service person count updates dynamically as dealers add their field team',
-                      style: TextStyle(fontSize: 12, color: AppColors.ink400),
+                      'Service person count updates dynamically',
+                      style: TextStyle(fontSize: 11, color: AppColors.ink400),
                     ),
                   ],
                 ),
@@ -115,7 +123,10 @@ class AdminDealerManagementView extends StatelessWidget {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => const AddDealerDialog(),
+                      builder: (innerContext) => BlocProvider.value(
+                        value: context.read<AdminDashboardCubit>(),
+                        child: const AddDealerDialog(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.add, size: 18),
@@ -148,17 +159,17 @@ class AdminDealerManagementView extends StatelessWidget {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       color: AppColors.bg.withValues(alpha: 0.3),
       child: Row(
         children: const [
           Expanded(flex: 3, child: _HeaderCell('DEALER NAME')),
           Expanded(flex: 2, child: _HeaderCell('REGION')),
-          Expanded(flex: 2, child: _HeaderCell('SERVICE PERSONS')),
+          Expanded(flex: 3, child: _HeaderCell('CAPACITY & UTILIZATION')),
           Expanded(flex: 2, child: _HeaderCell('REQUESTS HANDLED')),
           Expanded(flex: 1, child: _HeaderCell('SATISFACTION')),
           Expanded(flex: 1, child: _HeaderCell('STATUS')),
-          Expanded(flex: 2, child: _HeaderCell('TEAM ROSTER')),
+          Expanded(flex: 2, child: _HeaderCell('OFFICE ADDRESS')),
         ],
       ),
     );
@@ -166,7 +177,7 @@ class AdminDealerManagementView extends StatelessWidget {
 
   Widget _buildDealerRow(DealerData dealer) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         children: [
           Expanded(
@@ -191,7 +202,7 @@ class AdminDealerManagementView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Owner: ${dealer.contactPerson.name} · ${dealer.contactPerson.phone}',
+                        'Code: ${dealer.dealerCode}',
                         style: const TextStyle(color: AppColors.ink400, fontSize: 11),
                       ),
                     ],
@@ -208,23 +219,27 @@ class AdminDealerManagementView extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.purple.shade50,
+                    color: _getCapacityColor(dealer.capacity.capacityStatus).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.person_pin_outlined, size: 14, color: Colors.purple.shade700),
+                      Icon(Icons.pie_chart_outline, size: 14, color: _getCapacityColor(dealer.capacity.capacityStatus)),
                       const SizedBox(width: 4),
                       Text(
-                        '${dealer.techniciansCount} Technicians',
-                        style: TextStyle(color: Colors.purple.shade700, fontSize: 11, fontWeight: FontWeight.bold),
+                        '${dealer.capacity.activeAssignedTickets}/${dealer.capacity.maxConcurrentTickets} (${dealer.capacity.utilizationPercentage.toInt()}%)',
+                        style: TextStyle(
+                          color: _getCapacityColor(dealer.capacity.capacityStatus),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -242,7 +257,7 @@ class AdminDealerManagementView extends StatelessWidget {
           Expanded(
             flex: 1,
             child: Text(
-              '${dealer.performance.rating} ★',
+              '${dealer.performance.rating.toStringAsFixed(1)} ★',
               style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13),
             ),
           ),
@@ -252,17 +267,29 @@ class AdminDealerManagementView extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: TextButton(
-              onPressed: () {},
-              child: Text(
-                'View Team (${dealer.techniciansCount}) ›',
-                style: const TextStyle(color: AppColors.blue500, fontWeight: FontWeight.bold, fontSize: 12),
-              ),
+            child: Text(
+              dealer.officeAddress,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.ink600, fontSize: 11),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Color _getCapacityColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'available':
+        return Colors.green;
+      case 'near capacity':
+        return Colors.orange;
+      case 'full':
+        return Colors.red;
+      default:
+        return AppColors.ink600;
+    }
   }
 
   Widget _buildStatusPill(bool isActive) {

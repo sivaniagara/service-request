@@ -3,18 +3,18 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_ticket_detail_model.dart';
 
 class AdminAuditTimeline extends StatelessWidget {
-  final List<TimelineEvent> events;
+  final List<AdminTimelineEvent> events;
 
   const AdminAuditTimeline({super.key, required this.events});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.line, width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.line, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,12 +22,12 @@ class AdminAuditTimeline extends StatelessWidget {
           const Text(
             'Audit Timeline Log',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w900,
               color: AppColors.navy900,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -65,10 +65,10 @@ class AdminAuditTimeline extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 24.0),
+                        padding: const EdgeInsets.only(bottom: 16.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -78,7 +78,7 @@ class AdminAuditTimeline extends StatelessWidget {
                                 Text(
                                   event.title,
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.ink900,
                                   ),
@@ -97,12 +97,12 @@ class AdminAuditTimeline extends StatelessWidget {
                             Text(
                               event.description,
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: AppColors.ink600,
                                 height: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             Row(
                               children: [
                                 Container(

@@ -1,13 +1,28 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'dart:io' show File;
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../injection_container.dart';
+import '../../../data/models/complaint_models.dart';
+import '../../bloc/complaint_cubit.dart';
 import 'location_picker_dialog.dart';
 
 class RaiseComplaintDialog extends StatefulWidget {
-  const RaiseComplaintDialog({super.key});
+  final List<String> categories;
+  final String? initialName;
+  final String? initialPhone;
+  final VoidCallback? onSuccess;
+  const RaiseComplaintDialog({
+    super.key,
+    required this.categories,
+    this.initialName,
+    this.initialPhone,
+    this.onSuccess,
+  });
 
   @override
   State<RaiseComplaintDialog> createState() => _RaiseComplaintDialogState();
@@ -15,22 +30,24 @@ class RaiseComplaintDialog extends StatefulWidget {
 
 class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'S. Priya');
-  final _phoneController = TextEditingController(text: '+919842178900');
-  final _equipmentController = TextEditingController(text: 'X200 Agri Controller #C-902');
-  final _locationController = TextEditingController(text: 'Field Site — Coimbatore');
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+  final _equipmentController = TextEditingController(text: '');
+  final _locationController = TextEditingController(text: '');
   final _descriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName ?? '');
+    _phoneController = TextEditingController(text: widget.initialPhone ?? '');
+  }
   
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   String _selectedPriority = 'High';
-  List<String> _selectedCategories = ['Hardware', 'Repair'];
+  List<String> _selectedCategories = [];
   List<PlatformFile> _pickedImages = [];
-
-  final List<String> _categories = [
-    'Application', 'Hardware', 'Valve', 'Filter', 'Fertilizer', 'Sensors',
-    'Repair', 'Installation', 'Maintenance', 'Others'
-  ];
 
   final List<String> _priorities = ['Low', 'Medium', 'High', 'Critical'];
 
@@ -86,72 +103,123 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Dialog(
-      backgroundColor: Colors.white,
-      elevation: 24,
-      shadowColor: AppColors.navy900.withOpacity(0.5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
-        width: 800,
-        padding: const EdgeInsets.all(32),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildHeader(context),
-                const SizedBox(height: 32),
-                Row(
+    return BlocProvider(
+      create: (context) => sl<ComplaintCubit>(),
+      child: BlocListener<ComplaintCubit, ComplaintState>(
+        listener: (context, state) {
+          if (state is ComplaintLoading) {
+            AwesomeDialog(
+              width: 400,
+              context: context,
+              dialogType: DialogType.noHeader,
+              animType: AnimType.scale,
+              body: const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
                   children: [
-                    Expanded(child: _buildTextField('Your Name*', _nameController)),
-                    const SizedBox(width: 20),
-                    Expanded(child: _buildTextField('Phone Number*', _phoneController)),
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text('Submitting Ticket...', style: TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Row(
+              ),
+              dismissOnTouchOutside: false,
+              dismissOnBackKeyPress: false,
+            ).show();
+          } else if (state is ComplaintSuccess) {
+            Navigator.pop(context); // Close loading dialog
+            AwesomeDialog(
+              width: 400,
+              context: context,
+              dialogType: DialogType.success,
+              animType: AnimType.bottomSlide,
+              title: 'Success',
+              desc: 'Ticket #${state.response.ticketNumber} raised successfully!',
+              btnOkOnPress: () {
+                widget.onSuccess?.call();
+                Navigator.pop(context); // Close main dialog
+              },
+            ).show();
+          } else if (state is ComplaintFailure) {
+            Navigator.pop(context); // Close loading dialog
+            AwesomeDialog(
+              width: 400,
+              context: context,
+              dialogType: DialogType.error,
+              animType: AnimType.bottomSlide,
+              title: 'Submission Failed',
+              desc: state.message,
+              btnOkOnPress: () {},
+            ).show();
+          }
+        },
+        child: Dialog(
+          backgroundColor: Colors.white,
+          elevation: 24,
+          shadowColor: AppColors.navy900.withOpacity(0.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            width: 800,
+            padding: const EdgeInsets.all(32),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(child: _buildTextField('Equipment / Product*', _equipmentController)),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: _buildTextField(
-                        'Site Location*',
-                        _locationController,
-                        prefixIcon: Icons.location_on_outlined,
-                        onTap: () async {
-                          final result = await showDialog<String>(
-                            context: context,
-                            builder: (context) => LocationPickerDialog(initialLocation: _locationController.text),
-                          );
-                          if (result != null) {
-                            setState(() => _locationController.text = result);
-                          }
-                        },
-                      ),
+                    _buildHeader(context),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(child: _buildTextField('Your Name (Optional)', _nameController)),
+                        const SizedBox(width: 20),
+                        Expanded(child: _buildTextField('Phone Number (Optional)', _phoneController)),
+                      ],
                     ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            'Site Location*',
+                            _locationController,
+                            prefixIcon: Icons.location_on_outlined,
+                            validator: (value) => value == null || value.isEmpty ? 'Location is required' : null,
+                            onTap: () async {
+                              final result = await showDialog<String>(
+                                context: context,
+                                builder: (context) => LocationPickerDialog(initialLocation: _locationController.text),
+                              );
+                              if (result != null) {
+                                setState(() => _locationController.text = result);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    _buildCategorySelection(textTheme),
+                    const SizedBox(height: 28),
+                    _buildPriorityLevel(textTheme),
+                    const SizedBox(height: 28),
+                    _buildPreferredSlot(textTheme),
+                    const SizedBox(height: 28),
+                    _buildTextField(
+                      'What went wrong? (Detailed description) (Optional)',
+                      _descriptionController,
+                      maxLines: 4,
+                      hintText: 'Describe the issue...',
+                    ),
+                    const SizedBox(height: 28),
+                    _buildAttachmentArea(textTheme),
+                    const SizedBox(height: 32),
+                    Builder(builder: (context) => _buildFooter(context)),
                   ],
                 ),
-                const SizedBox(height: 28),
-                _buildCategorySelection(textTheme),
-                const SizedBox(height: 28),
-                _buildPriorityLevel(textTheme),
-                const SizedBox(height: 28),
-                _buildPreferredSlot(textTheme),
-                const SizedBox(height: 28),
-                _buildTextField(
-                  'What went wrong? (Detailed description)',
-                  _descriptionController,
-                  maxLines: 4,
-                  hintText: 'Describe the issue...',
-                ),
-                const SizedBox(height: 28),
-                _buildAttachmentArea(textTheme),
-                const SizedBox(height: 32),
-                _buildFooter(context),
-              ],
+              ),
             ),
           ),
         ),
@@ -204,7 +272,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      {int maxLines = 1, String? hintText, IconData? prefixIcon, VoidCallback? onTap}) {
+      {int maxLines = 1, String? hintText, IconData? prefixIcon, VoidCallback? onTap, String? Function(String?)? validator}) {
     final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,6 +287,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
           maxLines: maxLines,
           readOnly: onTap != null,
           onTap: onTap,
+          validator: validator,
           style: textTheme.bodyMedium?.copyWith(color: AppColors.ink900, fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: hintText,
@@ -233,6 +302,14 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.blue500, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.red500, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.red500, width: 2),
             ),
           ),
         ),
@@ -264,7 +341,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: _categories.map((cat) {
+          children: widget.categories.map((cat) {
             final isSelected = _selectedCategories.contains(cat);
             return FilterChip(
               label: Text(cat),
@@ -526,10 +603,18 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ticket Submitted Successfully!')),
+              final request = RaiseComplaintRequest(
+                name: _nameController.text,
+                phone: _phoneController.text,
+                location: _locationController.text,
+                issueCategory: _selectedCategories,
+                priority: _selectedPriority,
+                description: _descriptionController.text,
+                preferredDate: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
+                preferredTime: _selectedTime != null ? _selectedTime!.format(context) : null,
+                attachments: _pickedImages.map((e) => e.name).toList(), // Simplified for now
               );
+              context.read<ComplaintCubit>().raiseTicket(request);
             }
           },
           style: ElevatedButton.styleFrom(

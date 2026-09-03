@@ -115,7 +115,7 @@ class DealerTicketListSidebar extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    ticket.title,
+                    ticket.productName ?? (ticket.issueCategory.isNotEmpty ? ticket.issueCategory.first : 'Service Request'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -152,11 +152,11 @@ class DealerTicketListSidebar extends StatelessWidget {
                     )
                   : Row(
                       children: const [
-                        Icon(Icons.access_time, size: 14, color: AppColors.orange500),
+                        Icon(Icons.access_time, size: 14, color: Color(0xFF6366F1)),
                         SizedBox(width: 6),
                         Text(
                           'Needs Tech',
-                          style: TextStyle(color: AppColors.orange500, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -169,10 +169,10 @@ class DealerTicketListSidebar extends StatelessWidget {
               flex: 2,
               child: GestureDetector(
                 onTap: () => onAssign(ticket),
-                child: Text(
-                  ticket.firstTechName == null ? 'Assign Tech' : 'Reassign',
-                  style: const TextStyle(
-                    color: AppColors.amber500,
+                child: const Text(
+                  'Assign Tech',
+                  style: TextStyle(
+                    color: Color(0xFF6366F1),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -194,8 +194,8 @@ class DealerTicketListSidebar extends StatelessWidget {
         bgColor = AppColors.blue100;
         break;
       case 'Assigned to Handler':
-        color = AppColors.orange500;
-        bgColor = AppColors.orange100;
+        color = const Color(0xFF6366F1);
+        bgColor = const Color(0xFFEEF2FF);
         break;
       case 'Closed':
         color = AppColors.green500;

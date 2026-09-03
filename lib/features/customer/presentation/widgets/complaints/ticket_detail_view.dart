@@ -66,27 +66,28 @@ class TicketDetailView extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.bg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  ticket.issueCategory,
-                  style: textTheme.labelLarge?.copyWith(
-                    fontSize: 10,
-                    color: AppColors.ink600,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
+              if (ticket.issueCategory.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.bg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    ticket.issueCategory.join(', '),
+                    style: textTheme.labelLarge?.copyWith(
+                      fontSize: 10,
+                      color: AppColors.ink600,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            ticket.description,
+            ticket.description ?? 'No description provided',
             style: textTheme.bodyMedium?.copyWith(
               color: AppColors.ink600,
               fontSize: 13,
@@ -120,13 +121,13 @@ class TicketDetailView extends StatelessWidget {
                 const _VerticalDivider(),
                 _SummaryItem(
                   label: 'SITE LOCATION',
-                  value: ticket.siteLocation,
+                  value: ticket.siteLocation ?? 'Not specified',
                   icon: Icons.location_on_outlined,
                 ),
                 const _VerticalDivider(),
                 _SummaryItem(
                   label: 'RAISED ON',
-                  value: 'Aug 20, 2026',
+                  value: '${ticket.createdAt.day} ${_getMonth(ticket.createdAt.month)}, ${ticket.createdAt.year}',
                   icon: Icons.calendar_today_outlined,
                 ),
               ],
@@ -135,6 +136,11 @@ class TicketDetailView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getMonth(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
   }
 }
 

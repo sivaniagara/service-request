@@ -5,4 +5,5 @@ class RouteNames {
   static const String customerDashboard = '/customer-dashboard';
   static const String adminDashboard = '/admin-dashboard';
   static const String dealerDashboard = '/dealer-dashboard';
+  static const String technicianDashboard = '/technician-dashboard';
 }

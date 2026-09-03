@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:country_code_picker/country_code_picker.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../bloc/admin_dashboard_cubit.dart';
 
 class AddDealerDialog extends StatefulWidget {
   const AddDealerDialog({super.key});
@@ -11,19 +15,20 @@ class AddDealerDialog extends StatefulWidget {
 class _AddDealerDialogState extends State<AddDealerDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _ownerController = TextEditingController();
-  final _phoneController = TextEditingController(text: '+91');
+  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _addressController = TextEditingController();
   
+  String _countryCode = '+91';
   String _selectedRegion = 'Tamil Nadu (Coimbatore)';
   String _selectedStatus = 'Active';
 
   @override
   void dispose() {
     _nameController.dispose();
-    _ownerController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -46,19 +51,45 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
               const SizedBox(height: 32),
               Row(
                 children: [
-                  Expanded(child: _buildTextField('Dealer / Business Name*', 'e.g. Royal Agri Services', _nameController)),
-                  const SizedBox(width: 24),
-                  Expanded(child: _buildTextField('Owner Contact Name*', 'e.g. M. Natarajan', _ownerController)),
+                  Expanded(flex: 2, child: _buildTextField('Dealer Name*', 'e.g. Royal Agri Services', _nameController, validator: (v) => v!.isEmpty ? 'Required' : null)),
                 ],
               ),
               const SizedBox(height: 24),
               Row(
                 children: [
-                  Expanded(child: _buildTextField('Phone Number*', '+91', _phoneController, keyboardType: TextInputType.phone)),
+                  Expanded(
+                    child: _buildTextField(
+                      'Phone Number*',
+                      '1234567890',
+                      _phoneController,
+                      keyboardType: TextInputType.phone,
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                      prefixIcon: CountryCodePicker(
+                        onChanged: (code) {
+                          setState(() {
+                            _countryCode = code.dialCode!;
+                          });
+                        },
+                        initialSelection: 'IN',
+                        favorite: const ['+91', 'IN'],
+                        showCountryOnly: false,
+                        showOnlyCountryWhenClosed: false,
+                        alignLeft: false,
+                        padding: EdgeInsets.zero,
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF14274E),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 24),
                   Expanded(child: _buildTextField('Email Address', 'dealer@example.com', _emailController, keyboardType: TextInputType.emailAddress)),
                 ],
               ),
+              const SizedBox(height: 24),
+              _buildTextField('Office Address*', 'e.g. 123, Main Road, Coimbatore', _addressController, validator: (v) => v!.isEmpty ? 'Required' : null),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -123,7 +154,7 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller, {TextInputType? keyboardType}) {
+  Widget _buildTextField(String label, String hint, TextEditingController controller, {TextInputType? keyboardType, Widget? prefixIcon, String? Function(String?)? validator}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -135,10 +166,12 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          validator: validator,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: Color(0xFF95A0B4)),
+            prefixIcon: prefixIcon,
             fillColor: const Color(0xFFF4F6FB).withValues(alpha: 0.5),
             filled: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -206,10 +239,70 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              // Call API: POST /api/v1/admin/createDealer
-              Navigator.pop(context);
+              final fullPhone = '$_countryCode${_phoneController.text}';
+              
+              // Generate Dealer Code programmatically
+              final timestamp = DateTime.now().millisecondsSinceEpoch.toString().substring(7);
+              final generatedCode = 'DLR-$timestamp';
+
+              final requestBody = {
+                "name": _nameController.text,
+                "phone": fullPhone,
+                "email": _emailController.text,
+                "region": _selectedRegion,
+                "dealerCode": generatedCode,
+                "territoryZones": [_selectedRegion], // Using region as a default zone
+                "officeAddress": _addressController.text,
+                "maxConcurrentTickets": 10,
+                "rating": 5.0,
+              };
+
+              // Show Loading
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(child: CircularProgressIndicator()),
+              );
+
+              try {
+                await context.read<AdminDashboardCubit>().addDealer(requestBody);
+                
+                // Close loading
+                if (mounted) Navigator.pop(context);
+                
+                // Show Success
+                if (mounted) {
+                  AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.success,
+                    animType: AnimType.bottomSlide,
+                    title: 'Success',
+                    desc: 'Dealer account created successfully.',
+                    btnOkOnPress: () {
+                      Navigator.pop(context);
+                    },
+                    width: 400,
+                  ).show();
+                }
+              } catch (e) {
+                // Close loading
+                if (mounted) Navigator.pop(context);
+                
+                // Show Error
+                if (mounted) {
+                  AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.error,
+                    animType: AnimType.bottomSlide,
+                    title: 'Error',
+                    desc: e.toString(),
+                    btnOkOnPress: () {},
+                    width: 400,
+                  ).show();
+                }
+              }
             }
           },
           style: ElevatedButton.styleFrom(

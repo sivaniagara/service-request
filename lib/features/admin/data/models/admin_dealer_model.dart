@@ -1,13 +1,13 @@
 class AdminDealerModel {
   final String status;
   final DealerPagination? pagination;
-  final DealerSummary summary;
+  final DealerSummary? summary;
   final List<DealerData> data;
 
   AdminDealerModel({
     required this.status,
     this.pagination,
-    required this.summary,
+    this.summary,
     required this.data,
   });
 
@@ -15,7 +15,7 @@ class AdminDealerModel {
     return AdminDealerModel(
       status: json['status'],
       pagination: json['pagination'] != null ? DealerPagination.fromJson(json['pagination']) : null,
-      summary: DealerSummary.fromJson(json['summary']),
+      summary: json['summary'] != null ? DealerSummary.fromJson(json['summary']) : null,
       data: (json['data'] as List).map((i) => DealerData.fromJson(i)).toList(),
     );
   }
@@ -72,14 +72,11 @@ class DealerData {
   final String dealerCode;
   final String name;
   final String region;
-  final List<String> territoryZones;
+  final List<dynamic> territoryZones;
   final String officeAddress;
-  final ContactPerson contactPerson;
   final DealerCapacity capacity;
-  final int techniciansCount;
   final DealerPerformance performance;
   final bool isActive;
-  final DateTime onboardedDate;
 
   DealerData({
     required this.dealerId,
@@ -88,12 +85,9 @@ class DealerData {
     required this.region,
     required this.territoryZones,
     required this.officeAddress,
-    required this.contactPerson,
     required this.capacity,
-    required this.techniciansCount,
     required this.performance,
     required this.isActive,
-    required this.onboardedDate,
   });
 
   factory DealerData.fromJson(Map<String, dynamic> json) {
@@ -102,40 +96,11 @@ class DealerData {
       dealerCode: json['dealerCode'],
       name: json['name'],
       region: json['region'],
-      territoryZones: List<String>.from(json['territoryZones']),
+      territoryZones: json['territoryZones'] ?? [],
       officeAddress: json['officeAddress'],
-      contactPerson: ContactPerson.fromJson(json['contactPerson']),
       capacity: DealerCapacity.fromJson(json['capacity']),
-      techniciansCount: json['techniciansCount'],
       performance: DealerPerformance.fromJson(json['performance']),
       isActive: json['isActive'],
-      onboardedDate: DateTime.parse(json['onboardedDate']),
-    );
-  }
-}
-
-class ContactPerson {
-  final String userId;
-  final String name;
-  final String designation;
-  final String email;
-  final String phone;
-
-  ContactPerson({
-    required this.userId,
-    required this.name,
-    required this.designation,
-    required this.email,
-    required this.phone,
-  });
-
-  factory ContactPerson.fromJson(Map<String, dynamic> json) {
-    return ContactPerson(
-      userId: json['userId'],
-      name: json['name'],
-      designation: json['designation'],
-      email: json['email'],
-      phone: json['phone'],
     );
   }
 }
@@ -157,7 +122,7 @@ class DealerCapacity {
     return DealerCapacity(
       maxConcurrentTickets: json['maxConcurrentTickets'],
       activeAssignedTickets: json['activeAssignedTickets'],
-      utilizationPercentage: json['utilizationPercentage'].toDouble(),
+      utilizationPercentage: (json['utilizationPercentage'] as num).toDouble(),
       capacityStatus: json['capacityStatus'],
     );
   }
@@ -178,10 +143,10 @@ class DealerPerformance {
 
   factory DealerPerformance.fromJson(Map<String, dynamic> json) {
     return DealerPerformance(
-      rating: json['rating'].toDouble(),
+      rating: (json['rating'] as num).toDouble(),
       totalTicketsResolved: json['totalTicketsResolved'],
       slaComplianceRate: json['slaComplianceRate'],
-      avgResolutionHours: json['avgResolutionHours'].toDouble(),
+      avgResolutionHours: (json['avgResolutionHours'] as num).toDouble(),
     );
   }
 }

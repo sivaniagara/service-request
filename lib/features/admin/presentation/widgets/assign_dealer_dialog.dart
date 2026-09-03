@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_ticket_detail_model.dart';
@@ -232,7 +233,7 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
     );
   }
 
-  Widget _buildDealerItem(DealerListItem dealer) {
+  Widget _buildDealerItem(AdminDealerListItem dealer) {
     final isSelected = _selectedDealerIds.contains(dealer.dealerId);
     return InkWell(
       onTap: () {
@@ -429,8 +430,55 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
           child: ElevatedButton(
             onPressed: _selectedDealerIds.isEmpty
                 ? null
-                : () {
-                    Navigator.pop(context);
+                : () async {
+                    // Show Loading
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(child: CircularProgressIndicator()),
+                    );
+
+                    try {
+                      await context.read<AdminDashboardCubit>().assignDealer(
+                            widget.ticket.ticketId,
+                            _selectedDealerIds.toList(),
+                            _instructionsController.text,
+                          );
+
+                      // Close loading
+                      if (context.mounted) Navigator.pop(context);
+                      
+                      // Show Success and close dialog
+                      if (context.mounted) {
+                        AwesomeDialog(
+                          context: context,
+                          dialogType: DialogType.success,
+                          animType: AnimType.bottomSlide,
+                          title: 'Assignment Successful',
+                          desc: 'The ticket has been successfully assigned to the selected dealers.',
+                          btnOkOnPress: () {
+                            Navigator.pop(context); // Close AssignDealerDialog
+                          },
+                          width: 400,
+                        ).show();
+                      }
+                    } catch (e) {
+                      // Close loading
+                      if (context.mounted) Navigator.pop(context);
+
+                      // Show Error
+                      if (context.mounted) {
+                        AwesomeDialog(
+                          context: context,
+                          dialogType: DialogType.error,
+                          animType: AnimType.bottomSlide,
+                          title: 'Assignment Failed',
+                          desc: e.toString(),
+                          btnOkOnPress: () {},
+                          width: 400,
+                        ).show();
+                      }
+                    }
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF7C6CF0),

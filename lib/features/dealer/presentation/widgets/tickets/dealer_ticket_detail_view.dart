@@ -3,6 +3,7 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../data/models/dealer_ticket_model.dart';
 import '../dealer_complaint_stepper.dart';
 import '../assign_technician_dialog.dart';
+import '../delegate_branch_dialog.dart';
 import '../../bloc/dealer_dashboard_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,7 +42,7 @@ class DealerTicketDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              ticket.title,
+              ticket.displayTitle ?? '',
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -50,7 +51,7 @@ class DealerTicketDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              ticket.description,
+              ticket.description ?? '',
               style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.ink600,
@@ -59,7 +60,7 @@ class DealerTicketDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Text(
-              'DEALER STEPPER ACTIONS',
+              'MASTER DEALER DISPATCH & STEPPER ACTIONS',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -75,25 +76,46 @@ class DealerTicketDetailView extends StatelessWidget {
                     onPressed: () {
                       showDialog(
                         context: context,
+                        builder: (dialogContext) => DelegateBranchDialog(ticket: ticket),
+                      );
+                    },
+                    icon: const Icon(Icons.account_tree_outlined, size: 16),
+                    label: const Text('Delegate Branch'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF006D77),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      elevation: 0,
+                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
                         builder: (dialogContext) => BlocProvider.value(
                           value: context.read<DealerDashboardCubit>(),
                           child: AssignTechnicianDialog(ticket: ticket),
                         ),
                       );
                     },
-                    icon: const Icon(Icons.person_add_outlined, size: 16),
+                    icon: const Icon(Icons.person_outline, size: 16),
                     label: const Text('Assign Tech'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.orange500,
+                      backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {},
@@ -105,7 +127,7 @@ class DealerTicketDetailView extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

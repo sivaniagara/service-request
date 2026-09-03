@@ -111,7 +111,7 @@ class PendingActionsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  ticket.title,
+                  ticket.issueCategory.join(', '),
                   style: const TextStyle(fontSize: 14, color: AppColors.ink900),
                 ),
               ],

@@ -10,6 +10,7 @@ class DashboardState extends Equatable {
   final List<ServiceTicket>? tickets;
   final ServiceTicketDetail? selectedTicket;
   final CustomerReport? report;
+  final String? selectedActiveTicketId;
   final String? error;
 
   const DashboardState({
@@ -19,6 +20,7 @@ class DashboardState extends Equatable {
     this.tickets,
     this.selectedTicket,
     this.report,
+    this.selectedActiveTicketId,
     this.error,
   });
 
@@ -29,6 +31,7 @@ class DashboardState extends Equatable {
     List<ServiceTicket>? tickets,
     ServiceTicketDetail? selectedTicket,
     CustomerReport? report,
+    String? selectedActiveTicketId,
     String? error,
   }) {
     return DashboardState(
@@ -38,10 +41,20 @@ class DashboardState extends Equatable {
       tickets: tickets ?? this.tickets,
       selectedTicket: selectedTicket ?? this.selectedTicket,
       report: report ?? this.report,
+      selectedActiveTicketId: selectedActiveTicketId ?? this.selectedActiveTicketId,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [activeTab, isLoading, dashboardData, tickets, selectedTicket, report, error];
+  List<Object?> get props => [
+        activeTab,
+        isLoading,
+        dashboardData,
+        tickets,
+        selectedTicket,
+        report,
+        selectedActiveTicketId,
+        error,
+      ];
 }

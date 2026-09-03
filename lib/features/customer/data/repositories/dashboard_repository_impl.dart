@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../datasources/dashboard_remote_data_source.dart';
+import '../models/complaint_models.dart';
 import '../models/dashboard_models.dart';
 
 abstract class DashboardRepository {
@@ -8,6 +9,7 @@ abstract class DashboardRepository {
   Future<Either<Failure, List<ServiceTicket>>> getTickets(String status);
   Future<Either<Failure, ServiceTicketDetail>> getTicketDetail(String ticketId);
   Future<Either<Failure, CustomerReport>> getReport(String timeframe);
+  Future<Either<Failure, RaiseComplaintResponse>> raiseTicket(RaiseComplaintRequest request);
 }
 
 class DashboardRepositoryImpl implements DashboardRepository {
@@ -20,7 +22,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
     try {
       final data = await remoteDataSource.getCustomerDashboard();
       return Right(data);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("stackTrace : $stackTrace");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -49,6 +52,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, CustomerReport>> getReport(String timeframe) async {
     try {
       final data = await remoteDataSource.getReport(timeframe);
+      return Right(data);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, RaiseComplaintResponse>> raiseTicket(RaiseComplaintRequest request) async {
+    try {
+      final data = await remoteDataSource.raiseTicket(request);
       return Right(data);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

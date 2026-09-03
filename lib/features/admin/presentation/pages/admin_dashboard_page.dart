@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/token_manager.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_side_navigation.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../injection_container.dart';
 import '../bloc/admin_dashboard_cubit.dart';
 import '../bloc/admin_dashboard_state.dart';
+import '../widgets/add_dealer_dialog.dart';
 import '../widgets/admin_stat_card.dart';
 import '../widgets/top_dealers_card.dart';
 import '../widgets/pending_actions_card.dart';
@@ -32,7 +35,25 @@ class AdminDashboardPage extends StatelessWidget {
                   brandName: 'Green Sprout',
                   brandSubtext: 'Super Admin Console',
                   onProfileTap: () => context.push(RouteNames.profileSetup),
-                  onLogoutTap: () => context.go(RouteNames.login),
+                  onLogoutTap: () {
+                    AwesomeDialog(
+                      context: context,
+                      dialogType: DialogType.warning,
+                      animType: AnimType.bottomSlide,
+                      title: 'Logout',
+                      desc: 'Are you sure you want to logout from the admin console?',
+                      btnCancelOnPress: () {},
+                      btnOkText: 'Logout',
+                      btnOkColor: AppColors.navy900,
+                      btnOkOnPress: () async {
+                        await sl<TokenManager>().deleteToken();
+                        if (context.mounted) {
+                          context.go(RouteNames.login);
+                        }
+                      },
+                      width: 450,
+                    ).show();
+                  },
                   items: [
                     NavItem(
                       icon: Icons.dashboard_outlined,
@@ -64,12 +85,12 @@ class AdminDashboardPage extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeader(context),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
                         if (state.isLoading && 
                             state.dashboardData == null && 
                             state.tickets == null &&
@@ -203,11 +224,11 @@ class AdminDashboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 6,
+            flex: 4,
             child: Column(
               children: [
                 _buildSearchAndFilterBar(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 Expanded(
                   child: AdminTicketListSidebar(
                     tickets: state.tickets ?? [],
@@ -218,7 +239,7 @@ class AdminDashboardPage extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 16),
           Expanded(
             flex: 4,
             child: state.isDetailLoading
@@ -250,22 +271,22 @@ class AdminDashboardPage extends StatelessWidget {
         Expanded(
           flex: 4,
           child: Container(
-            height: 48,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppColors.line),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
-                const Icon(Icons.search, color: AppColors.ink400, size: 20),
-                const SizedBox(width: 12),
+                const Icon(Icons.search, color: AppColors.ink400, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search tickets...',
-                      hintStyle: const TextStyle(color: AppColors.ink400, fontSize: 14),
+                      hintStyle: const TextStyle(color: AppColors.ink400, fontSize: 13),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -278,7 +299,7 @@ class AdminDashboardPage extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
           flex: 6,
           child: SingleChildScrollView(
@@ -307,17 +328,17 @@ class AdminDashboardPage extends StatelessWidget {
 
   Widget _buildFilterPill(String label, {bool isActive = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isActive ? AppColors.navy900 : Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: isActive ? AppColors.navy900 : AppColors.line),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: isActive ? Colors.white : AppColors.ink600,
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -351,7 +372,15 @@ class AdminDashboardPage extends StatelessWidget {
           ],
         ),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (innerContext) => BlocProvider.value(
+                value: context.read<AdminDashboardCubit>(),
+                child: const AddDealerDialog(),
+              ),
+            );
+          },
           icon: const Icon(Icons.add, size: 20),
           label: const Text('Add New Dealer'),
           style: ElevatedButton.styleFrom(

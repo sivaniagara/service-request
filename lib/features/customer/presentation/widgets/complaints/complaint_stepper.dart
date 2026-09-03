@@ -195,7 +195,7 @@ class _StepItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  milestone.description,
+                  milestone.description ?? '',
                   style: textTheme.bodyMedium?.copyWith(
                     color: isPending ? AppColors.ink400 : AppColors.ink600,
                     fontSize: 11.5,

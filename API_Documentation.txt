@@ -1,0 +1,537 @@
+COMPLAINT SERVICE SYSTEM - BACKEND API DOCUMENTATION
+
+This document defines the REST API endpoints required for the Complaint Service System. The system supports four user roles: Customer, Admin, Dealer, and Service Person (Technician).
+
+================================================================
+AUTHENTICATION APIs
+================================================================
+
+1. Send OTP
+   - Endpoint: POST /api/auth/send-otp
+   - Description: Sends a one-time password to the user's mobile number.
+   - Request Body:
+     {
+       "phone": "+919876543210"
+     }
+   - Response:
+     {
+       "status": "success",
+       "message": "OTP sent successfully"
+     }
+
+2. Verify OTP
+   - Endpoint: POST /api/auth/verify-otp
+   - Description: Verifies the OTP and returns an authentication token.
+   - Request Body:
+     {
+       "phone": "+919876543210",
+       "otp": "123456"
+     }
+   - Response:
+     {
+       "status": "success",
+       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+       "user": {
+         "userId": "usr-101",
+         "name": "S. Siva",
+         "role": "Customer",
+         "isProfileComplete": false
+       }
+     }
+
+3. Profile Setup
+   - Endpoint: POST /api/auth/profile-setup
+   - Description: Completes the user profile after the first login.
+   - Request Body:
+     {
+       "name": "S. Siva",
+       "email": "siva@greenacres.in",
+       "address": "Zone 3, Thudiyalur Road, Coimbatore",
+       "role": "Customer"
+     }
+   - Response:
+     {
+       "status": "success",
+       "user": {
+         "userId": "usr-101",
+         "name": "S. Siva",
+         "email": "siva@greenacres.in",
+         "phone": "+919876543210",
+         "address": "Zone 3, Thudiyalur Road, Coimbatore",
+         "role": "Customer",
+         "isProfileComplete": true
+       }
+     }
+
+================================================================
+CUSTOMER APIs
+================================================================
+
+1. Get Customer Dashboard
+   - Endpoint: GET /api/customer/dashboard
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "customerProfile": {
+           "userId": 1,
+           "name": "S. Siva",
+           "phone": "+919876543210",
+           "email": "siva@greenacres.in",
+           "address": "Zone 3, Thudiyalur Road, Coimbatore"
+         },
+         "metrics": {
+           "totalComplaintsRaised": 4,
+           "inProgressCount": 2,
+           "resolvedCount": 2,
+           "overallSatisfactionRating": 4.9
+         },
+         "requestByCategory": [
+           {"category": "Valves", "count": 2, "color": "#28A745"},
+           {"category": "Pumps", "count": 1, "color": "#FFC107"}
+         ],
+         "activeTickets": [
+           {
+             "ticketId": "tck-104",
+             "ticketNumber": "TCK-104",
+             "title": "Irrigation Valve Not Opening",
+             "category": "Valves",
+             "priority": "High",
+             "status": "In Progress",
+             "currentMilestone": "Traveling to site",
+             "supportMode": "visit",
+             "siteLocation": "Green Acres Farm",
+             "createdAt": "2026-08-20T09:14:00Z",
+             "assignedDealer": [{
+               "name": "Green Sprout Agro",
+               "phone": "+919876540001",
+               "assignedTechnician": [{
+                 "name": "Ramesh Kumar",
+                 "phone": "+919876541001",
+                 "status": "En Route"
+               }]
+             }]
+           }
+         ],
+         "recentTickets": [
+           {
+             "ticketId": "tck-104",
+             "ticketNumber": "TCK-104",
+             "title": "Irrigation Valve Not Opening",
+             "status": "In Progress"
+           }
+         ]
+       }
+     }
+
+2. Get Tickets
+   - Endpoint: GET /api/customer/tickets
+   - Response:
+     {
+       "status": "success",
+       "data": [
+         {
+           "ticketId": "tck-104",
+           "ticketNumber": "TCK-104",
+           "title": "Irrigation Valve Not Opening",
+           "description": "Zone 3 solenoid valve failure",
+           "issueCategory": "Valves",
+           "priority": "High",
+           "status": "In Progress",
+           "supportMode": "visit",
+           "siteLocation": "Green Acres Farm",
+           "createdAt": "2026-08-20T09:14:00Z",
+           "hasRating": false,
+           "assignedDealersCount": 1,
+           "assignedTechnicians": [{"name": "Ramesh Kumar", "phone": "+919876541001"}]
+         }
+       ]
+     }
+
+3. Get Ticket Detail
+   - Endpoint: GET /api/customer/tickets/{ticketId}
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "ticketId": "tck-104",
+         "ticketNumber": "TCK-104",
+         "title": "Irrigation Valve Not Opening",
+         "description": "Loud grinding noise from pump line.",
+         "issueCategory": "Valves",
+         "priority": "High",
+         "status": "In Progress",
+         "supportMode": "visit",
+         "siteLocation": "Field Site — Coimbatore",
+         "preferredSlot": "Morning (9:00 AM - 1:00 PM)",
+         "createdAt": "2026-08-20T09:30:00Z",
+         "assignedDealer": [{
+           "dealerId": "dlr-01",
+           "name": "Green Sprout Agro",
+           "phone": "+919876540001",
+           "email": "support@agritech.com",
+           "region": "Coimbatore, TN",
+           "assignedTechnician": [{
+             "technicianId": "tech-01",
+             "name": "Ramesh Kumar",
+             "phone": "+919876543210",
+             "rating": 4.6,
+             "totalResolved": 84,
+             "travelDistance": "4.2 km",
+             "estimatedEta": "12 mins",
+             "status": "On job"
+           }]
+         }],
+         "stepperMilestones": [
+           {
+             "stepOrder": 1,
+             "key": "submitted",
+             "title": "Complaint Raised",
+             "description": "Submitted via portal",
+             "status": "done",
+             "updatedAt": "Aug 20, 09:30 AM",
+             "updatedBy": "S. Priya"
+           }
+         ],
+         "timelineEvents": [
+           {
+             "id": "tl-001",
+             "timestamp": "Aug 20, 2026 09:30 AM",
+             "title": "Complaint Created",
+             "description": "Customer raised complaint.",
+             "actor": "S. Priya",
+             "actorRole": "Customer",
+             "badgeType": "Customer"
+           }
+         ],
+         "attachedPhotos": ["https://example.com/photo1.jpg"]
+       }
+     }
+
+4. Raise Complaint
+   - Endpoint: POST /api/customer/tickets
+   - Request Body:
+     {
+       "name": "S. Priya",
+       "phone": "+919842178900",
+       "equipment": "X200 Agri Controller #C-902",
+       "location": "Field Site — Coimbatore",
+       "categories": ["Hardware", "Repair"],
+       "priority": "High",
+       "description": "The motor is overheating and tripping the circuit.",
+       "preferredDate": "2026-09-05",
+       "preferredTime": "10:30 AM",
+       "attachments": ["base64_or_temp_url"]
+     }
+   - Response:
+     {
+       "status": "success",
+       "ticketId": "tck-106",
+       "ticketNumber": "TCK-106"
+     }
+
+5. Get Customer Report
+   - Endpoint: GET /api/customer/reports
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "timeframe": "2026 (Year to Date)",
+         "summaryCards": {
+           "totalServiceRequests": 6,
+           "firstVisitResolvedRate": "100%",
+           "averageTurnaroundHours": 3.2,
+           "averageSatisfactionScore": 4.9
+         },
+         "categoryBreakdown": [
+           {"category": "Valves", "count": 3, "percentage": 50.0, "color": "#3B82F6"}
+         ],
+         "serviceHistory": [
+           {
+             "ticketNumber": "TCK-101",
+             "product": "Submersible Pump 5HP",
+             "resolvedDate": "2026-08-15",
+             "turnaroundTime": "2 hrs 10 mins",
+             "technicianName": "Ramesh Kumar",
+             "dealerName": "AgriTech Solutions",
+             "ratingGiven": 5,
+             "downloadPdfUrl": "https://example.com/report1.pdf"
+           }
+         ]
+       }
+     }
+
+================================================================
+ADMIN APIs
+================================================================
+
+1. Get Admin Dashboard
+   - Endpoint: GET /api/admin/dashboard
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "summaryMetrics": {
+           "totalTickets": 142,
+           "pendingAssignment": 6,
+           "inProgress": 28,
+           "escalated": 3,
+           "resolvedToday": 12,
+           "activeDealersCount": 8,
+           "activeFieldTechnicians": 34,
+           "slaComplianceRate": "96.4%",
+           "avgFirstResponseMinutes": 18
+         },
+         "regionalDistribution": [
+           {
+             "regionCode": "CBE-W",
+             "regionName": "Coimbatore West",
+             "activeTickets": 14,
+             "dealersCount": 2,
+             "availableTechnicians": 6,
+             "capacityUtilizationPct": 70.0,
+             "status": "normal"
+           }
+         ],
+         "urgentAttentionQueue": [
+           {
+             "ticketId": "tck-105",
+             "ticketNumber": "TCK-105",
+             "title": "Dosing pump failure",
+             "customerName": "K. Balan",
+             "siteLocation": "Pollachi South Farm",
+             "priority": "Critical",
+             "status": "Pending Assignment",
+             "ageInHours": 2.4,
+             "slaBreachInHours": 1.6
+           }
+         ]
+       }
+     }
+
+2. Get All Tickets
+   - Endpoint: GET /api/admin/tickets
+   - Response:
+     {
+       "status": "success",
+       "data": [
+         {
+           "ticketId": "tck-105",
+           "ticketNumber": "TCK-105",
+           "title": "Moisture Sensor Drift",
+           "description": "Sensors returning erratic readings.",
+           "productName": "ChemDose Pro",
+           "issueCategory": "Fertigation",
+           "priority": "Critical",
+           "status": "Pending Assignment",
+           "customer": {
+             "customerId": "c105",
+             "name": "S. Priya",
+             "phone": "+919876544001",
+             "siteLocation": "Warehouse — Pollachi"
+           },
+           "assignedDealers": [],
+           "createdAt": "2026-08-24T18:30:00Z"
+         }
+       ],
+       "dealerList": [
+         {
+           "dealerId": "dlr-01",
+           "dealerCode": "DLR-01",
+           "name": "Green Sprout Agro",
+           "region": "Coimbatore West",
+           "rating": 4.6,
+           "techniciansCount": 4
+         }
+       ]
+     }
+
+3. Assign Dealer
+   - Endpoint: POST /api/admin/tickets/{ticketId}/assign-dealer
+   - Request Body:
+     {
+       "dealerIds": ["dlr-01", "dlr-02"],
+       "instructions": "Priority SLA for on-site diagnostic within 24 hours."
+     }
+   - Response: { "status": "success" }
+
+4. Manage Dealers (Get)
+   - Endpoint: GET /api/admin/dealers
+   - Response:
+     {
+       "status": "success",
+       "data": [
+         {
+           "dealerId": "dlr-01",
+           "dealerCode": "DLR-01",
+           "name": "AgriTech Service Solutions",
+           "region": "Coimbatore West",
+           "territoryZones": ["Zone 1", "Zone 2"],
+           "officeAddress": "12 Cross Cut Road, Coimbatore",
+           "contactPerson": {
+             "userId": "usr-d1",
+             "name": "Saravanan",
+             "email": "support@agritech.com",
+             "phone": "+919876540001"
+           },
+           "capacity": {
+             "maxConcurrentTickets": 15,
+             "activeAssignedTickets": 8,
+             "utilizationPercentage": 53.3,
+             "capacityStatus": "optimal"
+           },
+           "performance": {
+             "rating": 4.9,
+             "totalTicketsResolved": 312,
+             "slaComplianceRate": "98.2%",
+             "avgResolutionHours": 2.4
+           },
+           "isActive": true
+         }
+       ]
+     }
+
+5. SLA Compliance
+   - Endpoint: GET /api/admin/reports/sla-compliance
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "title": "SLA Compliance Breakdown",
+         "totalTickets": 100,
+         "primaryMetric": {"value": 78, "percentage": 78.0, "label": "ON-TIME"},
+         "breakdown": [
+           {"id": "onTime", "label": "On-time", "count": 78, "percentage": 78.0, "colorHex": "#10B981"},
+           {"id": "delayed", "label": "Delayed", "count": 14, "percentage": 14.0, "colorHex": "#F59E0B"}
+         ]
+       }
+     }
+
+================================================================
+DEALER APIs
+================================================================
+
+1. Get Dealer Dashboard
+   - Endpoint: GET /api/dealer/dashboard
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "dealerProfile": {
+           "dealerId": "dlr-01",
+           "name": "Green Sprout Agro",
+           "region": "Coimbatore, TN",
+           "rating": 4.6
+         },
+         "metrics": {
+           "totalActiveTickets": 37,
+           "pendingTechnicianAssignment": 2,
+           "inProgressTickets": 31,
+           "resolvedToday": 3,
+           "capacityUtilizationPct": 53.3,
+           "availableTechniciansCount": 2,
+           "totalTechniciansCount": 4
+         },
+         "urgentActionQueue": [
+           {
+             "ticketId": "tck-105",
+             "ticketNumber": "TCK-105",
+             "title": "Dosing pump failure",
+             "category": "Fertigation",
+             "priority": "Critical",
+             "status": "Assigned to Dealer",
+             "customerName": "K. Balan",
+             "siteLocation": "Pollachi South Farm",
+             "createdAt": "2026-08-27T18:30:00Z",
+             "actionRequired": "Assign Field Technician"
+           }
+         ],
+         "technicianSummary": {
+           "available": 2,
+           "onJob": 2,
+           "offline": 0
+         }
+       }
+     }
+
+2. Assign Technician
+   - Endpoint: POST /api/dealer/tickets/{ticketId}/assign-technician
+   - Request Body:
+     {
+       "technicianId": "tech-01",
+       "notes": "Please check the solenoid valve specifically."
+     }
+   - Response: { "status": "success" }
+
+3. Manage Technicians (Get)
+   - Endpoint: GET /api/dealer/technicians
+   - Response:
+     {
+       "status": "success",
+       "data": [
+         {
+           "technicianId": "tech-01",
+           "name": "Ramesh Kumar",
+           "phone": "+919876541001",
+           "email": "ramesh@agritech.com",
+           "availabilityStatus": "On job",
+           "currentlyAssignedCount": 3,
+           "totalResolved": 58,
+           "rating": 4.8,
+           "skills": ["Repair", "Valve"]
+         }
+       ]
+     }
+
+================================================================
+SERVICE PERSON (TECHNICIAN) APIs
+================================================================
+
+1. Get Technician Dashboard
+   - Endpoint: GET /api/technician/dashboard
+   - Response:
+     {
+       "status": "success",
+       "data": {
+         "assignedTickets": [
+           {
+             "ticketId": "tck-104",
+             "ticketNumber": "TCK-104",
+             "title": "Irrigation Valve Not Opening",
+             "category": "Valves",
+             "priority": "High",
+             "status": "In Progress",
+             "equipmentModel": "HMS-V2",
+             "customer": {
+               "name": "S. Siva",
+               "phone": "+919876543210",
+               "siteLocation": "Green Acres Farm"
+             },
+             "supportMode": "Site Visit"
+           }
+         ],
+         "metrics": {
+           "resolvedToday": 2,
+           "pendingToday": 1
+         }
+       }
+     }
+
+2. Update Ticket Status
+   - Endpoint: PATCH /api/technician/tickets/{ticketId}/status
+   - Request Body:
+     {
+       "status": "In Progress",
+       "supportMode": "Site Visit"
+     }
+   - Response: { "status": "success" }
+
+3. Resolve Ticket
+   - Endpoint: POST /api/technician/tickets/{ticketId}/resolve
+   - Request Body:
+     {
+       "notes": "Replaced the motor coupler and tested the flow cycle. System is now stable.",
+       "photos": ["https://example.com/proof1.jpg", "https://example.com/proof2.jpg"],
+       "partsReplaced": ["Motor Coupler", "Seal Ring"]
+     }
+   - Response: { "status": "success" }

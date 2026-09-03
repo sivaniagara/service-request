@@ -1,6 +1,8 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/token_manager.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_side_navigation.dart';
 import '../../../../core/router/route_names.dart';
@@ -8,11 +10,13 @@ import '../bloc/dealer_dashboard_cubit.dart';
 import '../bloc/dealer_dashboard_state.dart';
 import '../widgets/dashboard/dealer_rating_banner.dart';
 import '../widgets/dashboard/team_workload_card.dart';
-import '../widgets/dashboard/dealer_stat_card.dart';
+import '../../../../core/widgets/kpi_card.dart';
 import '../widgets/tickets/dealer_ticket_detail_view.dart';
 import '../widgets/assign_technician_dialog.dart';
+import '../widgets/add_technician_dialog.dart';
 import '../widgets/dealer_team_view.dart';
 import '../widgets/reports/dealer_performance_report_view.dart';
+import '../widgets/dealer_sub_dealer_management_view.dart';
 import '../../../../injection_container.dart';
 import '../../data/models/dealer_ticket_model.dart';
 import '../widgets/tickets/dealer_ticket_list_sidebar.dart';
@@ -26,15 +30,33 @@ class DealerDashboardPage extends StatelessWidget {
       create: (context) => sl<DealerDashboardCubit>()..loadDashboard(),
       child: Scaffold(
         backgroundColor: AppColors.bg,
-        body: BlocBuilder<DealerDashboardCubit, DealerDashboardState>(
-          builder: (context, state) {
-            return Row(
-              children: [
+        body: BlocListener<DealerDashboardCubit, DealerDashboardState>(
+          listenWhen: (previous, current) => previous.error != current.error && current.error != null,
+          listener: (context, state) {
+            if (state.error != null) {
+              AwesomeDialog(
+                context: context,
+                dialogType: DialogType.error,
+                animType: AnimType.bottomSlide,
+                title: 'Data Load Error',
+                desc: state.error,
+                btnOkOnPress: () {},
+                width: 450,
+              ).show();
+            }
+          },
+          child: BlocBuilder<DealerDashboardCubit, DealerDashboardState>(
+            builder: (context, state) {
+              return Row(
+                children: [
                 AppSideNavigation(
                   brandName: 'Green Sprout',
                   brandSubtext: 'Dealer Workspace',
                   onProfileTap: () => context.push(RouteNames.profileSetup),
-                  onLogoutTap: () => context.go(RouteNames.login),
+                  onLogoutTap: () async {
+                    await sl<TokenManager>().deleteToken();
+                    if (context.mounted) context.go(RouteNames.login);
+                  },
                   items: [
                     NavItem(
                       icon: Icons.dashboard_outlined,
@@ -55,6 +77,12 @@ class DealerDashboardPage extends StatelessWidget {
                       badge: '4',
                       isActive: state.activeTab == DealerDashboardTab.team,
                       onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.team),
+                    ),
+                    NavItem(
+                      icon: Icons.account_tree_outlined,
+                      label: 'Sub Dealers',
+                      isActive: state.activeTab == DealerDashboardTab.subDealerManagement,
+                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.subDealerManagement),
                     ),
                     NavItem(
                       icon: Icons.analytics_outlined,
@@ -82,6 +110,8 @@ class DealerDashboardPage extends StatelessWidget {
                           _buildServiceRequests(context, state)
                         else if (state.activeTab == DealerDashboardTab.team)
                           _buildTeamView(state)
+                        else if (state.activeTab == DealerDashboardTab.subDealerManagement)
+                          const Expanded(child: DealerSubDealerManagementView())
                         else if (state.activeTab == DealerDashboardTab.reports)
                           _buildPerformanceReport(state)
                         else
@@ -99,6 +129,7 @@ class DealerDashboardPage extends StatelessWidget {
           },
         ),
       ),
+    ),
     );
   }
 
@@ -118,15 +149,15 @@ class DealerDashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.navy900 : Colors.white,
+        color: isActive ? const Color(0xFF6366F1) : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isActive ? AppColors.navy900 : AppColors.line),
+        border: Border.all(color: isActive ? const Color(0xFF6366F1) : AppColors.line),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: isActive ? Colors.white : AppColors.ink600,
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -188,7 +219,12 @@ class DealerDashboardPage extends StatelessWidget {
           ],
         ),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const AddTechnicianDialog(),
+            );
+          },
           icon: const Icon(Icons.add, size: 20),
           label: const Text('Add Service Person'),
           style: ElevatedButton.styleFrom(
@@ -220,11 +256,11 @@ class DealerDashboardPage extends StatelessWidget {
             Row(
               children: [
                 const Expanded(
-                  child: DealerStatCard(
+                  child: KPICard(
                     title: 'Assigned Requests',
                     value: '3',
-                    subtext: '▲ 5 vs last month',
-                    subtextColor: Colors.green,
+                    subtitle: '▲ 5 vs last month',
+                    subtitleColor: Colors.green,
                     icon: Icons.build_circle_outlined,
                     iconColor: AppColors.blue500,
                     iconBgColor: AppColors.blue100,
@@ -232,10 +268,10 @@ class DealerDashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DealerStatCard(
+                  child: KPICard(
                     title: 'Service Persons',
                     value: data?.metrics.totalTechniciansCount.toString() ?? '4',
-                    subtext: 'On your active roster',
+                    subtitle: 'On your active roster',
                     icon: Icons.person_outline,
                     iconColor: AppColors.purple500,
                     iconBgColor: AppColors.purple100,
@@ -243,11 +279,11 @@ class DealerDashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DealerStatCard(
+                  child: KPICard(
                     title: 'Open Work Orders',
                     value: data?.metrics.pendingTechnicianAssignment.toString() ?? '2',
-                    subtext: 'In progress',
-                    subtextColor: AppColors.orange500,
+                    subtitle: 'In progress',
+                    subtitleColor: AppColors.orange500,
                     icon: Icons.folder_open_outlined,
                     iconColor: AppColors.orange500,
                     iconBgColor: AppColors.orange100,
@@ -255,11 +291,11 @@ class DealerDashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DealerStatCard(
+                  child: KPICard(
                     title: 'Customer Rating',
                     value: '${data?.profile.rating ?? 4.6}★',
-                    subtext: '▲ 0.2 vs last period',
-                    subtextColor: Colors.green,
+                    subtitle: '▲ 0.2 vs last period',
+                    subtitleColor: Colors.green,
                     icon: Icons.sentiment_satisfied_alt,
                     iconColor: AppColors.green500,
                     iconBgColor: AppColors.green100,
@@ -271,9 +307,11 @@ class DealerDashboardPage extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Expanded(
+                Expanded(
                   flex: 2,
-                  child: TeamWorkloadCard(),
+                  child: TeamWorkloadCard(
+                    technicians: state.dashboardData?.technicians ?? [],
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -296,19 +334,19 @@ class DealerDashboardPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.orange100.withValues(alpha: 0.3),
+              color: const Color(0xFF6366F1).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.orange100),
+              border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.15)),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.orange500,
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFF6366F1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.build, color: Colors.white, size: 16),
+                  child: const Icon(Icons.auto_fix_high_rounded, color: Colors.white, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -317,12 +355,20 @@ class DealerDashboardPage extends StatelessWidget {
                     children: const [
                       Text(
                         'Dealer Execution & Technician Assignment',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.amber500, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          color: Color(0xFF4338CA), 
+                          fontSize: 14,
+                        ),
                       ),
                       SizedBox(height: 2),
                       Text(
                         'Select a ticket to assign a field technician or update the vertical stepper to "Task Completed".',
-                        style: TextStyle(color: AppColors.amber500, fontSize: 11),
+                        style: TextStyle(
+                          color: Color(0xFF6366F1), 
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -331,29 +377,32 @@ class DealerDashboardPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _buildDealerSearchAndFilterBar(),
-          const SizedBox(height: 20),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   flex: 6,
-                  child: state.isTicketsLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : DealerTicketListSidebar(
-                          tickets: state.tickets ?? [],
-                          selectedTicketId: state.selectedTicket?.ticketId ?? '',
-                          onTicketSelected: (id) => context.read<DealerDashboardCubit>().selectTicket(id),
-                          onAssign: (ticket) {
-                            if (state.selectedTicketDetail != null && state.selectedTicketDetail!.ticketId == ticket.ticketId) {
-                               _showAssignDialog(context, state.selectedTicketDetail!);
-                            } else {
-                              // If detail not loaded for this ticket, we'd fetch it here.
-                              // For now, if it's the selected one, show it.
-                            }
-                          },
-                        ),
+                  child: Column(
+                    children: [
+                      _buildDealerSearchAndFilterBar(),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: state.isTicketsLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : DealerTicketListSidebar(
+                                tickets: state.tickets ?? [],
+                                selectedTicketId: state.selectedTicket?.ticketId ?? '',
+                                onTicketSelected: (id) => context.read<DealerDashboardCubit>().selectTicket(id),
+                                onAssign: (ticket) {
+                                  if (state.selectedTicketDetail != null && state.selectedTicketDetail!.ticketId == ticket.ticketId) {
+                                     _showAssignDialog(context, state.selectedTicketDetail!);
+                                  }
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -373,65 +422,71 @@ class DealerDashboardPage extends StatelessWidget {
   }
 
   Widget _buildDealerSearchAndFilterBar() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          flex: 4,
-          child: Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.line),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Icon(Icons.search, color: AppColors.ink400, size: 20),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search assigned tickets by #, customer, location...',
-                      hintStyle: TextStyle(color: AppColors.ink400, fontSize: 14),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                      contentPadding: EdgeInsets.zero,
+        Row(
+          spacing: 20,
+          children: [
+            Container(
+              width: 300,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.line),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: AppColors.ink400, size: 18),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search tickets...',
+                        hintStyle: TextStyle(color: AppColors.ink400, fontSize: 13),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 3,
-          child: Row(
-            children: [
-              _buildFilterPill('All', isActive: true),
-              const SizedBox(width: 8),
-              _buildFilterPill('Needs Tech'),
-              const SizedBox(width: 8),
-              _buildFilterPill('In Progress'),
-              const SizedBox(width: 8),
-              _buildFilterPill('Completed'),
-            ],
-          ),
-        ),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterPill('All', isActive: true),
+                    const SizedBox(width: 8),
+                    _buildFilterPill('Needs Tech'),
+                    const SizedBox(width: 8),
+                    _buildFilterPill('In Progress'),
+                    const SizedBox(width: 8),
+                    _buildFilterPill('Completed'),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        )
       ],
     );
   }
 
   Widget _buildTeamView(DealerDashboardState state) {
-    if (state.isTechniciansLoading && state.technicians == null) {
+    if (state.isTechniciansLoading && state.serviceTeamData == null) {
       return const Expanded(child: Center(child: CircularProgressIndicator()));
     }
     return Expanded(
       child: SingleChildScrollView(
-        child: DealerTeamView(technicians: state.technicians ?? []),
+        child: DealerTeamView(
+          data: state.serviceTeamData,
+        ),
       ),
     );
   }

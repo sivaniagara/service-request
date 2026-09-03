@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/admin_dashboard_repository_impl.dart';
 import 'admin_dashboard_state.dart';
@@ -12,7 +13,9 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     try {
       final model = await repository.getDashboardData();
       emit(state.copyWith(isLoading: false, dashboardData: model.data));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadDashboard error: $e");
+      debugPrint("loadDashboard : $stackTrace");
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -29,7 +32,9 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
       if (model.data.isNotEmpty) {
         selectTicket(model.data.first.ticketId);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadTickets error: $e");
+      debugPrint("loadTickets : $stackTrace");
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -42,7 +47,9 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
       try {
         final detailModel = await repository.getAdminTicketDetail(ticketId);
         emit(state.copyWith(isDetailLoading: false, selectedTicketDetail: detailModel.data));
-      } catch (e) {
+      } catch (e, stackTrace) {
+        debugPrint("selectTicket error: $e");
+        debugPrint("selectTicket : $stackTrace");
         emit(state.copyWith(isDetailLoading: false, error: e.toString()));
       }
     }
@@ -53,7 +60,9 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     try {
       final model = await repository.getAdminDealers();
       emit(state.copyWith(isLoading: false, dealers: model));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadDealers error: $e");
+      debugPrint("loadDealers : $stackTrace");
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -83,6 +92,30 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
       loadDealers();
     } else if (tab == AdminDashboardTab.reports && state.reportSummary == null) {
       loadReports();
+    }
+  }
+
+  Future<void> addDealer(Map<String, dynamic> data) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await repository.addDealer(data);
+      await loadDealers(); // Refresh the table
+      emit(state.copyWith(isLoading: false));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+      rethrow;
+    }
+  }
+
+  Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await repository.assignDealer(ticketId, dealerIds, instructions);
+      await selectTicket(ticketId); // Refresh ticket details
+      emit(state.copyWith(isLoading: false));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+      rethrow;
     }
   }
 }

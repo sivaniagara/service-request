@@ -53,7 +53,7 @@ class ActiveTicketCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '#${ticket.ticketNumber} — ${ticket.title}',
+            '#${ticket.ticketNumber} — ${ticket.issueCategory.join(', ')}',
             style: textTheme.titleLarge?.copyWith(fontSize: 17),
           ),
           const SizedBox(height: 16),

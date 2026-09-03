@@ -218,7 +218,7 @@ class _TicketCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              ticket.title,
+              ticket.issueCategory.join(', '),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 13,
                 color: isSelected ? AppColors.navy900 : AppColors.ink900,
@@ -228,7 +228,7 @@ class _TicketCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              ticket.description,
+              ticket.description ?? '',
               style: textTheme.bodyMedium?.copyWith(color: AppColors.ink600, fontSize: 11),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -240,28 +240,29 @@ class _TicketCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    ticket.siteLocation,
+                    ticket.siteLocation ?? '',
                     style: textTheme.labelLarge?.copyWith(color: AppColors.ink400, fontSize: 9),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.blue100.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    ticket.issueCategory.split(' & ').first,
-                    style: textTheme.labelLarge?.copyWith(
-                      fontSize: 8,
-                      color: AppColors.blue500,
-                      fontWeight: FontWeight.bold,
+                if (ticket.issueCategory.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.blue100.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      ticket.issueCategory.first,
+                      style: textTheme.labelLarge?.copyWith(
+                        fontSize: 8,
+                        color: AppColors.blue500,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ],

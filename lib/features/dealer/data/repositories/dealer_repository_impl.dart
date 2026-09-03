@@ -8,6 +8,9 @@ abstract class DealerRepository {
   Future<List<DealerTicket>> getDealerTickets();
   Future<DealerTicketDetail> getDealerTicketDetail(String ticketId);
   Future<List<DealerTechnician>> getTechnicians();
+  Future<DealerServiceTeamModel> getServiceTeam();
+  Future<void> addTechnician(Map<String, dynamic> data);
+  Future<void> assignTechnician(String ticketId, String technicianId, String notes);
 }
 
 class DealerRepositoryImpl implements DealerRepository {
@@ -33,5 +36,20 @@ class DealerRepositoryImpl implements DealerRepository {
   @override
   Future<List<DealerTechnician>> getTechnicians() async {
     return await remoteDataSource.getTechnicians();
+  }
+
+  @override
+  Future<DealerServiceTeamModel> getServiceTeam() async {
+    return await remoteDataSource.getServiceTeam();
+  }
+
+  @override
+  Future<void> addTechnician(Map<String, dynamic> data) async {
+    await remoteDataSource.addTechnician(data);
+  }
+
+  @override
+  Future<void> assignTechnician(String ticketId, String technicianId, String notes) async {
+    await remoteDataSource.assignTechnician(ticketId, technicianId, notes);
   }
 }

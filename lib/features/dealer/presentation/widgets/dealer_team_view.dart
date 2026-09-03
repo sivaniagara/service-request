@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/kpi_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/status_pill.dart';
 import '../../data/models/dealer_technician_model.dart';
-import 'dashboard/dealer_stat_card.dart';
+import 'add_technician_dialog.dart';
 
 class DealerTeamView extends StatelessWidget {
-  final List<DealerTechnician> technicians;
-
-  const DealerTeamView({super.key, required this.technicians});
+  final DealerServiceTeamModel? data;
+  const DealerTeamView({super.key, this.data});
 
   @override
   Widget build(BuildContext context) {
+    if (data == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -21,49 +25,50 @@ class DealerTeamView extends StatelessWidget {
   }
 
   Widget _buildStatCards() {
+    final summary = data!.summary;
     return Row(
       children: [
-        const Expanded(
-          child: DealerStatCard(
+        Expanded(
+          child: KPICard(
             title: 'Total Service Persons',
-            value: '4',
-            subtext: 'In Green Sprout Agro',
-            subtextColor: AppColors.purple500,
+            value: summary.totalServicePersons.toString(),
+            subtitle: 'In Green Sprout Agro',
+            subtitleColor: AppColors.purple500,
             icon: Icons.person_outline,
             iconColor: AppColors.purple500,
             iconBgColor: AppColors.purple100,
           ),
         ),
         const SizedBox(width: 16),
-        const Expanded(
-          child: DealerStatCard(
+        Expanded(
+          child: KPICard(
             title: 'Requests Handled',
-            value: '37',
-            subtext: 'This month',
+            value: summary.requestsHandled.toString(),
+            subtitle: 'This month',
             icon: Icons.build_circle_outlined,
             iconColor: AppColors.blue500,
             iconBgColor: AppColors.blue100,
           ),
         ),
         const SizedBox(width: 16),
-        const Expanded(
-          child: DealerStatCard(
+        Expanded(
+          child: KPICard(
             title: 'Currently Assigned',
-            value: '6',
-            subtext: 'Active on field',
-            subtextColor: AppColors.orange500,
+            value: summary.currentlyAssigned.toString(),
+            subtitle: 'Active on field',
+            subtitleColor: AppColors.orange500,
             icon: Icons.folder_open_outlined,
             iconColor: AppColors.orange500,
             iconBgColor: AppColors.orange100,
           ),
         ),
         const SizedBox(width: 16),
-        const Expanded(
-          child: DealerStatCard(
+        Expanded(
+          child: KPICard(
             title: 'Avg Tech Rating',
-            value: '4.6★',
-            subtext: 'High performance',
-            subtextColor: AppColors.green500,
+            value: '${summary.avgTechRating}★',
+            subtitle: 'High performance',
+            subtitleColor: AppColors.green500,
             icon: Icons.sentiment_satisfied_alt,
             iconColor: AppColors.green500,
             iconBgColor: AppColors.green100,
@@ -74,42 +79,23 @@ class DealerTeamView extends StatelessWidget {
   }
 
   Widget _buildTeamTable(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.line),
-      ),
+      borderRadius: 16,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Your Service Team',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.navy900,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Manage field technicians, skill tags, and track active assignments',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.ink400,
-                    ),
-                  ),
-                ],
-              ),
+          SectionHeader(
+            title: 'Your Service Team',
+            subtitle: 'Manage field technicians, skill tags, and track active assignments',
+            actions: [
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const AddTechnicianDialog(),
+                  );
+                },
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Add Service Person'),
                 style: ElevatedButton.styleFrom(
@@ -127,7 +113,7 @@ class DealerTeamView extends StatelessWidget {
           const SizedBox(height: 32),
           _buildTableHeader(),
           const Divider(height: 1),
-          ...technicians.map((tech) => _buildTechRow(context, tech)),
+          ...data!.technicians.map((tech) => _buildTechRow(context, tech)),
         ],
       ),
     );
@@ -183,6 +169,13 @@ class DealerTeamView extends StatelessWidget {
                       tech.phone,
                       style: const TextStyle(color: AppColors.ink400, fontSize: 11),
                     ),
+                    if (tech.travelDistance != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '${tech.travelDistance} • ${tech.estimatedEta ?? "N/A"}',
+                        style: const TextStyle(color: AppColors.blue500, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -229,58 +222,16 @@ class DealerTeamView extends StatelessWidget {
           ),
           Expanded(
             flex: 1,
-            child: _buildStatusPill(tech.availabilityStatus),
+            child: StatusPill(
+              label: tech.availabilityStatus,
+              color: tech.availabilityStatus.toLowerCase() == 'available' ? AppColors.green500 : tech.availabilityStatus.toLowerCase() == 'on job' ? AppColors.blue500 : AppColors.ink600,
+              backgroundColor: tech.availabilityStatus.toLowerCase() == 'available' ? AppColors.green100 : tech.availabilityStatus.toLowerCase() == 'on job' ? AppColors.blue100 : AppColors.bg,
+              borderRadius: 6,
+              fontSize: 10,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSkillChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.blue100.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.blue100),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 10, color: AppColors.blue500, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  Widget _buildStatusPill(String status) {
-    Color color;
-    Color bgColor;
-    switch (status.toLowerCase()) {
-      case 'available':
-        color = AppColors.green500;
-        bgColor = AppColors.green100;
-        break;
-      case 'on job':
-      case 'on site':
-        color = AppColors.blue500;
-        bgColor = AppColors.blue100;
-        break;
-      default:
-        color = AppColors.ink600;
-        bgColor = AppColors.bg;
-    }
-
-    return UnconstrainedBox(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          status,
-          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
-        ),
       ),
     );
   }
@@ -291,6 +242,21 @@ class DealerTeamView extends StatelessWidget {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
     return parts[0][0].toUpperCase();
+  }
+
+  Widget _buildSkillChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.blue100.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.blue100),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 10, color: AppColors.blue500, fontWeight: FontWeight.w600),
+      ),
+    );
   }
 }
 

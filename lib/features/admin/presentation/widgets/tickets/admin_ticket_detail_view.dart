@@ -22,7 +22,7 @@ class AdminTicketDetailView extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -31,7 +31,7 @@ class AdminTicketDetailView extends StatelessWidget {
                 Text(
                   '#${ticket.ticketNumber}',
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppColors.navy900,
                   ),
@@ -51,14 +51,14 @@ class AdminTicketDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              ticket.description,
+              ticket.description ?? '',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 color: AppColors.ink600,
-                height: 1.5,
+                height: 1.4,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -72,37 +72,37 @@ class AdminTicketDetailView extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.storefront_outlined, size: 20),
+                    icon: const Icon(Icons.storefront_outlined, size: 18),
                     label: const Text('Assign Dealer(s)'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.purple500,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.report_problem_outlined, size: 20),
+                    icon: const Icon(Icons.report_problem_outlined, size: 18),
                     label: const Text('Escalate to HQ'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.red500,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildAssignedDealersSection(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -120,18 +120,18 @@ class AdminTicketDetailView extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AdminComplaintStepper(milestones: ticket.stepperMilestones),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             const Text(
               'Timeline Log',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: AppColors.navy900,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AdminAuditTimeline(events: ticket.timelineEvents),
           ],
         ),
@@ -197,7 +197,7 @@ class AdminTicketDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildDealerMiniCard(AssignedDealerDetail dealer) {
+  Widget _buildDealerMiniCard(AdminAssignedDealerDetail dealer) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),

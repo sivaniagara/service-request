@@ -3,7 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_ticket_detail_model.dart';
 
 class AdminServiceHandlerInfo extends StatelessWidget {
-  final List<AssignedDealerDetail> dealers;
+  final List<AdminAssignedDealerDetail> dealers;
 
   const AdminServiceHandlerInfo({super.key, required this.dealers});
 
@@ -16,7 +16,7 @@ class AdminServiceHandlerInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildDealerCard(BuildContext context, AssignedDealerDetail dealer) {
+  Widget _buildDealerCard(BuildContext context, AdminAssignedDealerDetail dealer) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(24),
@@ -48,7 +48,7 @@ class AdminServiceHandlerInfo extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Regional Dealer • ${dealer.region}',
+                      'Regional Dealer • ${dealer.region ?? ''}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.ink400,
@@ -74,7 +74,7 @@ class AdminServiceHandlerInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildTechnicianRow(BuildContext context, AssignedTechnicianDetail tech) {
+  Widget _buildTechnicianRow(BuildContext context, AdminAssignedTechnicianDetail tech) {
     return Row(
       children: [
         const CircleAvatar(

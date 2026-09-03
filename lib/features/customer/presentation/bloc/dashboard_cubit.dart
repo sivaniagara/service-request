@@ -12,8 +12,18 @@ class DashboardCubit extends Cubit<DashboardState> {
     final result = await repository.getCustomerDashboard();
     result.fold(
       (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
-      (data) => emit(state.copyWith(isLoading: false, dashboardData: data)),
+      (data) {
+        emit(state.copyWith(
+          isLoading: false,
+          dashboardData: data,
+          selectedActiveTicketId: data.activeTickets.isNotEmpty ? data.activeTickets.first.ticketId : null,
+        ));
+      },
     );
+  }
+
+  void selectActiveTicket(String ticketId) {
+    emit(state.copyWith(selectedActiveTicketId: ticketId));
   }
 
   Future<void> changeTab(DashboardTab tab) async {

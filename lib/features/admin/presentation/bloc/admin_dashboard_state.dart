@@ -10,9 +10,9 @@ class AdminDashboardState {
   final bool isLoading;
   final bool isDetailLoading;
   final AdminDashboardData? dashboardData;
-  final List<AdminTicket>? tickets;
-  final List<DealerListItem>? dealerList;
-  final AdminTicket? selectedTicket;
+  final List<AdminTicketItem>? tickets;
+  final List<AdminDealerListItem>? dealerList;
+  final AdminTicketItem? selectedTicket;
   final AdminTicketDetailData? selectedTicketDetail;
   final AdminDealerModel? dealers;
   final AdminReportSummaryData? reportSummary;
@@ -39,9 +39,9 @@ class AdminDashboardState {
     bool? isLoading,
     bool? isDetailLoading,
     AdminDashboardData? dashboardData,
-    List<AdminTicket>? tickets,
-    List<DealerListItem>? dealerList,
-    AdminTicket? selectedTicket,
+    List<AdminTicketItem>? tickets,
+    List<AdminDealerListItem>? dealerList,
+    AdminTicketItem? selectedTicket,
     AdminTicketDetailData? selectedTicketDetail,
     AdminDealerModel? dealers,
     AdminReportSummaryData? reportSummary,

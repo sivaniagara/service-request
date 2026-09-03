@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/dealer_technician_model.dart';
@@ -89,7 +90,7 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
             width: 12,
             height: 12,
             decoration: const BoxDecoration(
-              color: Colors.orange,
+              color: Color(0xFF6366F1),
               shape: BoxShape.circle,
             ),
           ),
@@ -137,9 +138,9 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50.withOpacity(0.3),
+        color: AppColors.blue500.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.shade100),
+        border: Border.all(color: AppColors.blue100),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,13 +154,13 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.amber500,
+                    color: AppColors.blue500,
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '#${widget.ticket.ticketNumber} — ${widget.ticket.title}',
+                  '#${widget.ticket.ticketNumber} — ${widget.ticket.displayTitle}',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -177,7 +178,7 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.amber500,
+                  color: AppColors.blue500,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -247,12 +248,12 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.orange : AppColors.line,
+            color: isSelected ? const Color(0xFF6366F1) : AppColors.line,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: Colors.orange.withOpacity(0.1),
+              color: const Color(0xFF6366F1).withOpacity(0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
             )
@@ -282,9 +283,9 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                       const SizedBox(width: 8),
                       Text(
                         '${tech.rating}★',
-                        style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.bold),
                       ),
-                      if (tech.isSkillsMatch) ...[
+                      ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -297,7 +298,7 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                             style: TextStyle(color: Colors.green, fontSize: 9, fontWeight: FontWeight.bold),
                           ),
                         ),
-                      ],
+                      ]
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -328,10 +329,10 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: isSelected ? Colors.orange : Colors.white,
+                color: isSelected ? const Color(0xFF6366F1) : Colors.white,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: isSelected ? Colors.orange : AppColors.line, width: 2),
+                border: Border.all(color: isSelected ? const Color(0xFF6366F1) : AppColors.line, width: 2),
               ),
               child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
             ),
@@ -380,23 +381,23 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50.withOpacity(0.3),
+        color: AppColors.blue500.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.shade100),
+        border: Border.all(color: AppColors.blue100),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome_outlined, color: AppColors.amber500, size: 20),
+          const Icon(Icons.auto_awesome_outlined, color: AppColors.blue500, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(fontSize: 12, color: AppColors.amber500, height: 1.4),
+                style: const TextStyle(fontSize: 12, color: AppColors.ink600, height: 1.4),
                 children: [
                   const TextSpan(
                     text: 'Instant Customer Notification: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue500),
                   ),
                   const TextSpan(text: 'Once dispatched, the customer will see '),
                   TextSpan(
@@ -436,10 +437,63 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
           ),
           const SizedBox(width: 16),
           ElevatedButton(
-            onPressed: _selectedTechId == null ? null : () => Navigator.pop(context),
+            onPressed: _selectedTechId == null 
+                ? null 
+                : () async {
+                    // Show Loading
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(child: CircularProgressIndicator()),
+                    );
+
+                    try {
+                      await context.read<DealerDashboardCubit>().assignTechnician(
+                        widget.ticket.ticketId,
+                        _selectedTechId!,
+                        _notesController.text,
+                      );
+
+                      // Close loading
+                      if (context.mounted) Navigator.pop(context);
+
+                      // Show Success
+                      if (context.mounted) {
+                        AwesomeDialog(
+                          context: context,
+                          dialogType: DialogType.success,
+                          animType: AnimType.bottomSlide,
+                          title: 'Dispatch Successful',
+                          desc: 'The technician has been assigned and notified.',
+                          btnOkOnPress: () {
+                            Navigator.pop(context); // Close AssignTechnicianDialog
+                          },
+                          width: 400,
+                        ).show();
+                      }
+                    } catch (e) {
+                      // Close loading
+                      if (context.mounted) Navigator.pop(context);
+
+                      // Show Error
+                      if (context.mounted) {
+                        AwesomeDialog(
+                          context: context,
+                          dialogType: DialogType.error,
+                          animType: AnimType.bottomSlide,
+                          title: 'Dispatch Failed',
+                          desc: e.toString(),
+                          btnOkOnPress: () {},
+                          width: 400,
+                        ).show();
+                      }
+                    }
+                  },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade800,
+              backgroundColor: const Color(0xFF4F46E5),
               foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(0xFFEDF0F6),
+              disabledForegroundColor: const Color(0xFF95A0B4),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,

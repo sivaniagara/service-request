@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/token_manager.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_side_navigation.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../injection_container.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
-import '../widgets/dashboard/active_ticket_card.dart';
-import '../widgets/dashboard/category_chart_card.dart';
-import '../widgets/dashboard/recent_history_card.dart';
+import '../widgets/dashboard/active_tickets_section.dart';
 import '../widgets/dashboard/summary_card.dart';
 import '../widgets/complaints/ticket_list_sidebar.dart';
 import '../widgets/complaints/ticket_detail_view.dart';
@@ -34,7 +33,10 @@ class CustomerDashboardPage extends StatelessWidget {
                   brandName: 'Green Sprout',
                   brandSubtext: 'Customer Portal',
                   onProfileTap: () => context.push(RouteNames.profileSetup),
-                  onLogoutTap: () => context.go(RouteNames.login),
+                  onLogoutTap: () async {
+                    await sl<TokenManager>().deleteToken();
+                    if (context.mounted) context.go(RouteNames.login);
+                  },
                   items: [
                     NavItem(
                       icon: Icons.dashboard_outlined,
@@ -73,7 +75,7 @@ class CustomerDashboardPage extends StatelessWidget {
                         else if (state.error != null)
                           Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
                         else if (state.activeTab == DashboardTab.overview)
-                          _buildOverview(state)
+                          _buildOverview(state, context)
                         else if (state.activeTab == DashboardTab.complaints)
                           _buildComplaints(context, state)
                         else if (state.activeTab == DashboardTab.reports)
@@ -90,7 +92,7 @@ class CustomerDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildOverview(DashboardState state) {
+  Widget _buildOverview(DashboardState state, BuildContext context) {
     if (state.dashboardData == null) return const SizedBox.shrink();
     final data = state.dashboardData!;
     return Expanded(
@@ -100,24 +102,13 @@ class CustomerDashboardPage extends StatelessWidget {
           children: [
             SummaryCard(metrics: data.metrics),
             const SizedBox(height: 24),
-            if (data.activeTickets.isNotEmpty) ...[
-              ActiveTicketCard(ticket: data.activeTickets.first),
-              const SizedBox(height: 24),
-            ],
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: CategoryChartCard(categories: data.requestByCategory),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  flex: 1,
-                  child: RecentHistoryCard(tickets: data.recentTickets),
-                ),
-              ],
-            ),
+            if (data.activeTickets.isNotEmpty)
+              ActiveTicketsSection(
+                tickets: data.activeTickets,
+                selectedTicketId: state.selectedActiveTicketId,
+              )
+            else
+              _buildNoActiveTickets(context, state),
             const SizedBox(height: 24),
           ],
         ),
@@ -172,6 +163,87 @@ class CustomerDashboardPage extends StatelessWidget {
     );
   }
 
+  Widget _buildNoActiveTickets(BuildContext context, DashboardState state) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.line.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.blue500.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle_outline_rounded,
+              size: 48,
+              color: AppColors.blue500,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'All systems operational',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: AppColors.navy900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'You don\'t have any active service requests at the moment.\nFeel free to reach out if you need assistance!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.ink400,
+              height: 1.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              final dashboardCubit = context.read<DashboardCubit>();
+              showDialog(
+                context: context,
+                builder: (context) => RaiseComplaintDialog(
+                  categories: state.dashboardData?.issueCategories ?? [],
+                  initialName: state.dashboardData?.profile.name,
+                  initialPhone: state.dashboardData?.profile.phone,
+                  onSuccess: () => dashboardCubit.loadDashboard(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.navy900,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Raise a New Complaint',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader(BuildContext context, DashboardState state) {
     final textTheme = Theme.of(context).textTheme;
     final profileName = state.dashboardData?.profile.name ?? 'S. Siva';
@@ -216,9 +288,15 @@ class CustomerDashboardPage extends StatelessWidget {
         ),
         ElevatedButton.icon(
           onPressed: () {
+            final dashboardCubit = context.read<DashboardCubit>();
             showDialog(
               context: context,
-              builder: (context) => const RaiseComplaintDialog(),
+              builder: (context) => RaiseComplaintDialog(
+                categories: state.dashboardData?.issueCategories ?? [],
+                initialName: state.dashboardData?.profile.name,
+                initialPhone: state.dashboardData?.profile.phone,
+                onSuccess: () => dashboardCubit.loadDashboard(),
+              ),
             );
           },
           icon: const Icon(Icons.add, size: 18),

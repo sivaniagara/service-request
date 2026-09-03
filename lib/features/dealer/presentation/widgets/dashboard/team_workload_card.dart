@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../data/models/dealer_technician_model.dart';
+import 'dart:math';
 
 class TeamWorkloadCard extends StatelessWidget {
-  const TeamWorkloadCard({super.key});
+  final List<DealerTechnician> technicians;
+
+  const TeamWorkloadCard({super.key, required this.technicians});
 
   @override
   Widget build(BuildContext context) {
+    // Sort technicians by resolved count descending
+    final sortedTechs = List<DealerTechnician>.from(technicians)
+      ..sort((a, b) => b.totalResolved.compareTo(a.totalResolved));
+    
+    // Take top 4 for the dashboard card
+    final displayTechs = sortedTechs.take(4).toList();
+    
+    // Find max resolved for progress calculation
+    final maxResolved = displayTechs.isEmpty 
+        ? 1 
+        : displayTechs.map((t) => t.totalResolved).reduce(max);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -55,13 +71,29 @@ class TeamWorkloadCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _WorkloadItem(name: 'Ramesh K.', phone: '+91 98765 43210', count: 58, progress: 0.95),
-          const SizedBox(height: 12),
-          _WorkloadItem(name: 'Divya S.', phone: '+91 98765 22110', count: 44, progress: 0.72),
-          const SizedBox(height: 12),
-          _WorkloadItem(name: 'Suresh M.', phone: '+91 98765 99001', count: 31, progress: 0.51),
-          const SizedBox(height: 12),
-          _WorkloadItem(name: 'Anitha R.', phone: '+91 98765 55678', count: 19, progress: 0.31),
+          if (displayTechs.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text('No technician data available', style: TextStyle(color: AppColors.ink400, fontSize: 12)),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: displayTechs.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final tech = displayTechs[index];
+                return _WorkloadItem(
+                  name: tech.name,
+                  phone: tech.phone,
+                  count: tech.totalResolved,
+                  progress: maxResolved > 0 ? tech.totalResolved / maxResolved : 0.0,
+                );
+              },
+            ),
         ],
       ),
     );

@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/dealer_repository_impl.dart';
 import '../../data/models/dealer_report_model.dart';
+import '../../data/models/sub_dealer_model.dart';
 import 'dealer_dashboard_state.dart';
 
 class DealerDashboardCubit extends Cubit<DealerDashboardState> {
@@ -13,7 +15,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
     try {
       final data = await repository.getDealerDashboard();
       emit(state.copyWith(isLoading: false, dashboardData: data));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadDashboard error: $e");
+      debugPrint("loadDashboard : $stackTrace");
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -52,6 +56,21 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
       emit(state.copyWith(isTechniciansLoading: false, technicians: technicians));
     } catch (e) {
       emit(state.copyWith(isTechniciansLoading: false, error: e.toString()));
+    }
+  }
+
+  Future<void> loadServiceTeam() async {
+    emit(state.copyWith(isTechniciansLoading: true, error: null));
+    try {
+      final data = await repository.getServiceTeam();
+      emit(state.copyWith(
+        isTechniciansLoading: false,
+        serviceTeamData: data,
+        technicians: data.technicians,
+      ));
+    } catch (e) {
+      emit(state.copyWith(isTechniciansLoading: false, error: e.toString()));
+      rethrow;
     }
   }
 
@@ -150,6 +169,59 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
     }
   }
 
+  Future<void> loadSubDealers() async {
+    emit(state.copyWith(isSubDealersLoading: true, error: null));
+    try {
+      // Mock data for Sub Dealers
+      await Future.delayed(const Duration(milliseconds: 500));
+      final List<SubDealer> subDealers = [
+        SubDealer(
+          id: 'SD-001',
+          branchName: 'Salem West Branch',
+          location: 'Salem, TN',
+          technicianCount: 12,
+          rating: 4.8,
+          isActive: true,
+          createdAt: DateTime.now().subtract(const Duration(days: 120)),
+          contactNumber: '+91 98765 43210',
+          managerName: 'Rajesh Kumar',
+        ),
+        SubDealer(
+          id: 'SD-002',
+          branchName: 'Erode East Hub',
+          location: 'Erode, TN',
+          technicianCount: 8,
+          rating: 4.5,
+          isActive: true,
+          createdAt: DateTime.now().subtract(const Duration(days: 95)),
+          contactNumber: '+91 98765 43211',
+          managerName: 'Suresh Raina',
+        ),
+        SubDealer(
+          id: 'SD-003',
+          branchName: 'Madurai North Service',
+          location: 'Madurai, TN',
+          technicianCount: 15,
+          rating: 4.2,
+          isActive: false,
+          createdAt: DateTime.now().subtract(const Duration(days: 200)),
+          contactNumber: '+91 98765 43212',
+          managerName: 'Vijay Sethu',
+        ),
+      ];
+      emit(state.copyWith(isSubDealersLoading: false, subDealers: subDealers));
+    } catch (e) {
+      emit(state.copyWith(isSubDealersLoading: false, error: e.toString()));
+    }
+  }
+
+  Future<void> addSubDealer(SubDealer subDealer) async {
+    // In a real app, this would call the repository
+    final currentSubDealers = List<SubDealer>.from(state.subDealers ?? []);
+    currentSubDealers.add(subDealer);
+    emit(state.copyWith(subDealers: currentSubDealers));
+  }
+
   void selectTicket(String ticketId) {
     if (state.tickets != null) {
       final selected = state.tickets!.firstWhere((t) => t.ticketId == ticketId);
@@ -164,10 +236,36 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
       loadTickets();
     } else if (tab == DealerDashboardTab.dashboard && state.dashboardData == null) {
       loadDashboard();
-    } else if (tab == DealerDashboardTab.team && state.technicians == null) {
-      loadTechnicians();
+    } else if (tab == DealerDashboardTab.team && state.serviceTeamData == null) {
+      loadServiceTeam();
     } else if (tab == DealerDashboardTab.reports && state.performanceReport == null) {
       loadPerformanceReport();
+    } else if (tab == DealerDashboardTab.subDealerManagement && state.subDealers == null) {
+      loadSubDealers();
+    }
+  }
+
+  Future<void> assignTechnician(String ticketId, String technicianId, String notes) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await repository.assignTechnician(ticketId, technicianId, notes);
+      await loadTicketDetail(ticketId); // Refresh details
+      emit(state.copyWith(isLoading: false));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+      rethrow;
+    }
+  }
+
+  Future<void> addTechnician(Map<String, dynamic> data) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await repository.addTechnician(data);
+      await loadServiceTeam(); // Refresh the team list
+      emit(state.copyWith(isLoading: false));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+      rethrow;
     }
   }
 }

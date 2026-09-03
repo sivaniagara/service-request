@@ -3,7 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_ticket_model.dart';
 
 class AdminTicketListSidebar extends StatelessWidget {
-  final List<AdminTicket> tickets;
+  final List<AdminTicketItem> tickets;
   final String selectedTicketId;
   final Function(String) onTicketSelected;
 
@@ -26,21 +26,21 @@ class AdminTicketListSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'All Service Requests (${tickets.length})',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.navy900,
                   ),
                 ),
                 const Text(
                   'Click any row to manage stepper & handlers',
-                  style: TextStyle(fontSize: 12, color: AppColors.ink400),
+                  style: TextStyle(fontSize: 11, color: AppColors.ink400),
                 ),
               ],
             ),
@@ -64,28 +64,26 @@ class AdminTicketListSidebar extends StatelessWidget {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       color: AppColors.bg.withValues(alpha: 0.3),
       child: Row(
         children: const [
           Expanded(flex: 3, child: _HeaderCell('TICKET')),
           Expanded(flex: 3, child: _HeaderCell('CUSTOMER & SITE')),
-          Expanded(flex: 3, child: _HeaderCell('ASSIGNED HANDLER(S)')),
           Expanded(flex: 2, child: _HeaderCell('STATUS')),
-          Expanded(flex: 2, child: _HeaderCell('ACTION')),
         ],
       ),
     );
   }
 
-  Widget _buildTicketRow(AdminTicket ticket) {
+  Widget _buildTicketRow(AdminTicketItem ticket) {
     final isSelected = ticket.ticketId == selectedTicketId;
     return InkWell(
       onTap: () => onTicketSelected(ticket.ticketId),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.blue500.withOpacity(0.06) : null,
+          color: isSelected ? AppColors.blue500.withValues(alpha: 0.06) : null,
           border: isSelected
               ? const Border(
                   left: BorderSide(color: AppColors.blue500, width: 4),
@@ -139,23 +137,8 @@ class AdminTicketListSidebar extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 3,
-              child: _buildHandlersCell(ticket),
-            ),
-            Expanded(
               flex: 2,
               child: _buildStatusPill(ticket.status),
-            ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                ticket.status == 'Pending Assignment' ? 'Assign' : 'Reassign',
-                style: const TextStyle(
-                  color: AppColors.purple500,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
             ),
           ],
         ),
@@ -163,8 +146,8 @@ class AdminTicketListSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildHandlersCell(AdminTicket ticket) {
-    if (ticket.status == 'Pending Assignment') {
+  Widget _buildHandlersCell(AdminTicketItem ticket) {
+    if (ticket.assignedDealers.isEmpty) {
       return Row(
         children: const [
           Icon(Icons.access_time, size: 14, color: Colors.orange),
@@ -178,17 +161,16 @@ class AdminTicketListSidebar extends StatelessWidget {
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Green Sprout Agro',
-          style: TextStyle(color: AppColors.purple500, fontWeight: FontWeight.bold, fontSize: 12),
-        ),
-        if (ticket.ticketNumber == 'TCK-102')
-          const Text(
-            'Sunrise Farm Tech',
-            style: TextStyle(color: AppColors.purple500, fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-      ],
+      children: ticket.assignedDealers
+          .map((dealer) => Text(
+                dealer.name,
+                style: const TextStyle(
+                  color: AppColors.purple500,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ))
+          .toList(),
     );
   }
 

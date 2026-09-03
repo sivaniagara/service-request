@@ -3,58 +3,43 @@ import 'package:equatable/equatable.dart';
 class DealerTicket extends Equatable {
   final String ticketId;
   final String ticketNumber;
-  final String title;
-  final String description;
-  final String productName;
-  final String serialNumber;
-  final String issueCategory;
+  final String? description;
+  final String? productName;
+  final List<String> issueCategory;
   final String priority;
   final String status;
-  final String supportMode;
-  final String siteLocation;
   final DealerTicketCustomer customer;
   final List<DealerTechnicianSummary> assignedTechnicians;
   final DateTime createdAt;
-  final String slaStatus;
 
   const DealerTicket({
     required this.ticketId,
     required this.ticketNumber,
-    required this.title,
-    required this.description,
-    required this.productName,
-    required this.serialNumber,
+    this.description,
+    this.productName,
     required this.issueCategory,
     required this.priority,
     required this.status,
-    required this.supportMode,
-    required this.siteLocation,
     required this.customer,
     required this.assignedTechnicians,
     required this.createdAt,
-    required this.slaStatus,
   });
 
   factory DealerTicket.fromJson(Map<String, dynamic> json) {
     return DealerTicket(
       ticketId: json['ticketId'],
       ticketNumber: json['ticketNumber'],
-      title: json['title'],
-      description: json['description'] ?? '',
-      productName: json['productName'] ?? '',
-      serialNumber: json['serialNumber'] ?? '',
-      issueCategory: json['issueCategory'] ?? '',
+      description: json['description'],
+      productName: json['productName'],
+      issueCategory: List<String>.from(json['issueCategory'] ?? []),
       priority: json['priority'] ?? '',
       status: json['status'],
-      supportMode: json['supportMode'] ?? '',
-      siteLocation: json['siteLocation'] ?? '',
       customer: DealerTicketCustomer.fromJson(json['customer']),
       assignedTechnicians: (json['assignedTechnicians'] as List?)
               ?.map((e) => DealerTechnicianSummary.fromJson(e))
               .toList() ??
           [],
       createdAt: DateTime.parse(json['createdAt']),
-      slaStatus: json['slaStatus'] ?? '',
     );
   }
 
@@ -64,31 +49,26 @@ class DealerTicket extends Equatable {
   List<Object?> get props => [
         ticketId,
         ticketNumber,
-        title,
         description,
         productName,
-        serialNumber,
         issueCategory,
         priority,
         status,
-        supportMode,
-        siteLocation,
         customer,
         assignedTechnicians,
         createdAt,
-        slaStatus,
       ];
 }
 
 class DealerTicketDetail extends Equatable {
   final String ticketId;
   final String ticketNumber;
-  final String title;
-  final String description;
-  final String issueCategory;
+  final String? title;
+  final String? description;
+  final List<String> issueCategory;
   final String priority;
   final String status;
-  final String supportMode;
+  final String? supportMode;
   final String siteLocation;
   final String? preferredSlot;
   final DateTime createdAt;
@@ -102,12 +82,12 @@ class DealerTicketDetail extends Equatable {
   const DealerTicketDetail({
     required this.ticketId,
     required this.ticketNumber,
-    required this.title,
-    required this.description,
+    this.title,
+    this.description,
     required this.issueCategory,
     required this.priority,
     required this.status,
-    required this.supportMode,
+    this.supportMode,
     required this.siteLocation,
     this.preferredSlot,
     required this.createdAt,
@@ -123,26 +103,27 @@ class DealerTicketDetail extends Equatable {
     // Extract technicians from assignedDealer if present (matching prompt JSON)
     List<DealerTechnicianDetail> techs = [];
     if (json['assignedDealer'] != null && (json['assignedDealer'] as List).isNotEmpty) {
-      final dealer = (json['assignedDealer'] as List).first;
-      if (dealer['assignedTechnician'] != null) {
-        techs = (dealer['assignedTechnician'] as List)
-            .map((e) => DealerTechnicianDetail.fromJson(e))
-            .toList();
+      for (var dealerEntry in (json['assignedDealer'] as List)) {
+        if (dealerEntry['assignedTechnician'] != null) {
+          techs.addAll((dealerEntry['assignedTechnician'] as List)
+              .map((e) => DealerTechnicianDetail.fromJson(e))
+              .toList());
+        }
       }
     }
 
     return DealerTicketDetail(
-      ticketId: json['ticketId'],
-      ticketNumber: json['ticketNumber'],
+      ticketId: json['ticketId'] ?? '',
+      ticketNumber: json['ticketNumber'] ?? '',
       title: json['title'],
-      description: json['description'] ?? '',
-      issueCategory: json['issueCategory'] ?? '',
+      description: json['description'],
+      issueCategory: List<String>.from(json['issueCategory'] ?? []),
       priority: json['priority'] ?? '',
-      status: json['status'],
-      supportMode: json['supportMode'] ?? '',
+      status: json['status'] ?? '',
+      supportMode: json['supportMode'],
       siteLocation: json['siteLocation'] ?? '',
       preferredSlot: json['preferredSlot'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       customer: json['customer'] != null ? DealerTicketCustomer.fromJson(json['customer']) : null,
       stepperMilestones: (json['stepperMilestones'] as List?)
               ?.map((e) => DealerMilestone.fromJson(e))
@@ -154,9 +135,11 @@ class DealerTicketDetail extends Equatable {
           [],
       attachedPhotos: List<String>.from(json['attachedPhotos'] ?? []),
       assignedTechnicians: techs,
-      requiredSkills: List<String>.from(json['requiredSkills'] ?? ['Repair', 'Hardware']),
+      requiredSkills: List<String>.from(json['requiredSkills'] ?? []),
     );
   }
+
+  String? get displayTitle => title ?? (issueCategory.isNotEmpty ? issueCategory.first : 'Service Request');
 
   String? get firstTechName => assignedTechnicians.isNotEmpty ? assignedTechnicians.first.name : null;
 
@@ -184,28 +167,22 @@ class DealerTicketDetail extends Equatable {
 
 class DealerTechnicianSummary extends Equatable {
   final String technicianId;
-  final String name;
-  final String phone;
-  final String status;
+  final String? name;
 
   const DealerTechnicianSummary({
     required this.technicianId,
-    required this.name,
-    required this.phone,
-    required this.status,
+    this.name,
   });
 
   factory DealerTechnicianSummary.fromJson(Map<String, dynamic> json) {
     return DealerTechnicianSummary(
       technicianId: json['technicianId'] ?? '',
-      name: json['name'] ?? '',
-      phone: json['phone'] ?? '',
-      status: json['status'] ?? '',
+      name: json['name'],
     );
   }
 
   @override
-  List<Object?> get props => [technicianId, name, phone, status];
+  List<Object?> get props => [technicianId, name];
 }
 
 class DealerTechnicianDetail extends Equatable {

@@ -48,6 +48,9 @@ dependencies:
   latlong2: ^0.9.1
   http: ^1.2.2
   file_picker: ^8.1.7
+  awesome_dialog: ^3.2.1
+  shared_preferences: ^2.3.2
+  country_code_picker: ^3.0.0
 
 dev_dependencies:
   flutter_test:

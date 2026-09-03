@@ -3,18 +3,18 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_ticket_detail_model.dart';
 
 class AdminComplaintStepper extends StatelessWidget {
-  final List<StepperMilestone> milestones;
+  final List<AdminStepperMilestone> milestones;
 
   const AdminComplaintStepper({super.key, required this.milestones});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.line, width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.line, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,12 +22,12 @@ class AdminComplaintStepper extends StatelessWidget {
           const Text(
             'Complaint Progress',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w900,
               color: AppColors.navy900,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -83,10 +83,10 @@ class AdminComplaintStepper extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 32.0),
+                        padding: const EdgeInsets.only(bottom: 20.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -100,7 +100,7 @@ class AdminComplaintStepper extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              milestone.description,
+                              milestone.description ?? '',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.ink600,

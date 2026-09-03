@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../data/models/dashboard_models.dart';
-import '../dashboard/category_chart_card.dart';
 import 'report_history_table.dart';
 import 'requests_over_time_chart.dart';
 
@@ -68,28 +67,7 @@ class ReportsView extends StatelessWidget {
           const SizedBox(height: 24),
           const RequestsOverTimeChart(),
           const SizedBox(height: 32),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(
-                flex: 3,
-                child: ReportHistoryTable(),
-              ),
-              const SizedBox(width: 32),
-              Expanded(
-                flex: 2,
-                child: CategoryChartCard(
-                  categories: report.categoryBreakdown
-                      .map((e) => RequestCategoryItem(
-                            category: e.category,
-                            count: e.count,
-                            color: e.color,
-                          ))
-                      .toList(),
-                ),
-              ),
-            ],
-          ),
+          const ReportHistoryTable(),
         ],
       ),
     );
