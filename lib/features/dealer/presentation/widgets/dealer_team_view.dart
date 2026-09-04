@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/kpi_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../data/models/dealer_technician_model.dart';
+import '../bloc/dealer_dashboard_cubit.dart';
 import 'add_technician_dialog.dart';
+import 'package:flutter/material.dart';
 
 class DealerTeamView extends StatelessWidget {
   final DealerServiceTeamModel? data;
@@ -93,7 +95,10 @@ class DealerTeamView extends StatelessWidget {
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (context) => const AddTechnicianDialog(),
+                    builder: (innerContext) => BlocProvider.value(
+                      value: context.read<DealerDashboardCubit>(),
+                      child: const AddTechnicianDialog(),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.add, size: 16),

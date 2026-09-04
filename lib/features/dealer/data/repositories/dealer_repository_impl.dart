@@ -2,6 +2,7 @@ import '../datasources/dealer_remote_data_source.dart';
 import '../models/dealer_dashboard_model.dart';
 import '../models/dealer_ticket_model.dart';
 import '../models/dealer_technician_model.dart';
+import '../models/sub_dealer_model.dart';
 
 abstract class DealerRepository {
   Future<DealerDashboardData> getDealerDashboard();
@@ -9,8 +10,10 @@ abstract class DealerRepository {
   Future<DealerTicketDetail> getDealerTicketDetail(String ticketId);
   Future<List<DealerTechnician>> getTechnicians();
   Future<DealerServiceTeamModel> getServiceTeam();
+  Future<SubDealerManagementData> getSubDealers();
+  Future<void> addSubDealer(Map<String, dynamic> data);
   Future<void> addTechnician(Map<String, dynamic> data);
-  Future<void> assignTechnician(String ticketId, String technicianId, String notes);
+  Future<void> assignTechnicians(String ticketId, List<String> technicianIds, String notes);
 }
 
 class DealerRepositoryImpl implements DealerRepository {
@@ -44,12 +47,22 @@ class DealerRepositoryImpl implements DealerRepository {
   }
 
   @override
+  Future<SubDealerManagementData> getSubDealers() async {
+    return await remoteDataSource.getSubDealers();
+  }
+
+  @override
+  Future<void> addSubDealer(Map<String, dynamic> data) async {
+    await remoteDataSource.addSubDealer(data);
+  }
+
+  @override
   Future<void> addTechnician(Map<String, dynamic> data) async {
     await remoteDataSource.addTechnician(data);
   }
 
   @override
-  Future<void> assignTechnician(String ticketId, String technicianId, String notes) async {
-    await remoteDataSource.assignTechnician(ticketId, technicianId, notes);
+  Future<void> assignTechnicians(String ticketId, List<String> technicianIds, String notes) async {
+    await remoteDataSource.assignTechnicians(ticketId, technicianIds, notes);
   }
 }

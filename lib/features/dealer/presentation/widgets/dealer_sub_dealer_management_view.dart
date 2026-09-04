@@ -13,20 +13,25 @@ class DealerSubDealerManagementView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DealerDashboardCubit, DealerDashboardState>(
       builder: (context, state) {
-        if (state.isSubDealersLoading && state.subDealers == null) {
+        if (state.isSubDealersLoading && state.subDealerData == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final subDealers = state.subDealers ?? [];
+        final data = state.subDealerData;
+        final summary = data?.summary;
+        final branches = data?.branches ?? [];
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSummaryHeader(subDealers),
+              if (summary != null)
+                _buildSummaryHeader(summary)
+              else
+                _buildPlaceholderSummary(),
               const SizedBox(height: 24),
-              _buildSubDealersList(context, subDealers),
+              _buildSubDealersList(context, branches),
             ],
           ),
         );
@@ -34,20 +39,14 @@ class DealerSubDealerManagementView extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryHeader(List<SubDealer> subDealers) {
-    final activeCount = subDealers.where((s) => s.isActive).length;
-    final totalTechs = subDealers.fold(0, (sum, item) => sum + item.technicianCount);
-    final avgRating = subDealers.isEmpty 
-        ? 0.0 
-        : subDealers.fold(0.0, (sum, item) => sum + item.rating) / subDealers.length;
-
+  Widget _buildPlaceholderSummary() {
     return Row(
       children: [
         Expanded(
           child: _SummaryCard(
             title: 'Sub-Dealer Branches',
-            value: subDealers.length.toString(),
-            subtitle: '$activeCount Active branches',
+            value: '-',
+            subtitle: 'Loading...',
             icon: Icons.account_tree_outlined,
             color: Colors.blue,
           ),
@@ -56,7 +55,43 @@ class DealerSubDealerManagementView extends StatelessWidget {
         Expanded(
           child: _SummaryCard(
             title: 'Branch Technicians',
-            value: totalTechs.toString(),
+            value: '-',
+            subtitle: 'Loading...',
+            icon: Icons.engineering_outlined,
+            color: Colors.purple,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _SummaryCard(
+            title: 'Avg Branch Rating',
+            value: '- ★',
+            subtitle: 'Loading...',
+            icon: Icons.star_outline,
+            color: Colors.orange,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryHeader(SubDealerSummary summary) {
+    return Row(
+      children: [
+        Expanded(
+          child: _SummaryCard(
+            title: 'Sub-Dealer Branches',
+            value: summary.totalSubDealerBranches.toString(),
+            subtitle: '${summary.activeBranchesCount} Active branches',
+            icon: Icons.account_tree_outlined,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _SummaryCard(
+            title: 'Branch Technicians',
+            value: summary.totalBranchTechnicians.toString(),
             subtitle: 'Managed across branches',
             icon: Icons.engineering_outlined,
             color: Colors.purple,
@@ -66,7 +101,7 @@ class DealerSubDealerManagementView extends StatelessWidget {
         Expanded(
           child: _SummaryCard(
             title: 'Avg Branch Rating',
-            value: '${avgRating.toStringAsFixed(1)} ★',
+            value: '${summary.avgBranchRating.toStringAsFixed(1)} ★',
             subtitle: 'Customer satisfaction',
             icon: Icons.star_outline,
             color: Colors.orange,
@@ -76,7 +111,7 @@ class DealerSubDealerManagementView extends StatelessWidget {
     );
   }
 
-  Widget _buildSubDealersList(BuildContext context, List<SubDealer> subDealers) {
+  Widget _buildSubDealersList(BuildContext context, List<SubDealerBranch> branches) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -134,7 +169,7 @@ class DealerSubDealerManagementView extends StatelessWidget {
           const Divider(height: 1),
           _buildTableHeader(),
           const Divider(height: 1),
-          if (subDealers.isEmpty)
+          if (branches.isEmpty)
             const Padding(
               padding: EdgeInsets.all(48.0),
               child: Center(
@@ -148,10 +183,10 @@ class DealerSubDealerManagementView extends StatelessWidget {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: subDealers.length,
+              itemCount: branches.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
-                return _buildSubDealerRow(subDealers[index]);
+                return _buildSubDealerRow(branches[index]);
               },
             ),
         ],
@@ -168,7 +203,6 @@ class DealerSubDealerManagementView extends StatelessWidget {
           Expanded(flex: 3, child: _HeaderCell('BRANCH NAME')),
           Expanded(flex: 2, child: _HeaderCell('LOCATION')),
           Expanded(flex: 2, child: _HeaderCell('TECHNICIANS')),
-          Expanded(flex: 2, child: _HeaderCell('MANAGER')),
           Expanded(flex: 1, child: _HeaderCell('RATING')),
           Expanded(flex: 1, child: _HeaderCell('STATUS')),
         ],
@@ -176,7 +210,7 @@ class DealerSubDealerManagementView extends StatelessWidget {
     );
   }
 
-  Widget _buildSubDealerRow(SubDealer subDealer) {
+  Widget _buildSubDealerRow(SubDealerBranch subDealer) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Row(
@@ -188,7 +222,7 @@ class DealerSubDealerManagementView extends StatelessWidget {
                 CircleAvatar(
                   backgroundColor: AppColors.blue100,
                   child: Text(
-                    subDealer.branchName.substring(0, 1),
+                    subDealer.branchName.isNotEmpty ? subDealer.branchName.substring(0, 1) : '?',
                     style: const TextStyle(color: AppColors.blue500, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -202,7 +236,7 @@ class DealerSubDealerManagementView extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'ID: ${subDealer.id}',
+                      'Code: ${subDealer.dealerCode}',
                       style: const TextStyle(color: AppColors.ink400, fontSize: 11),
                     ),
                   ],
@@ -220,24 +254,8 @@ class DealerSubDealerManagementView extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              '${subDealer.technicianCount} Personnel',
+              '${subDealer.techniciansCount} Personnel',
               style: const TextStyle(color: AppColors.navy900, fontWeight: FontWeight.w600, fontSize: 12),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subDealer.managerName,
-                  style: const TextStyle(color: AppColors.navy900, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  subDealer.contactNumber,
-                  style: const TextStyle(color: AppColors.ink400, fontSize: 11),
-                ),
-              ],
             ),
           ),
           Expanded(

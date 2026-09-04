@@ -3,7 +3,7 @@ import '../../../../core/widgets/app_vertical_stepper.dart';
 import '../../data/models/technician_ticket_model.dart';
 
 class TechnicianComplaintStepper extends StatelessWidget {
-  final List<TicketStepperStep> steps;
+  final List<TicketMilestone> steps;
 
   const TechnicianComplaintStepper({super.key, required this.steps});
 

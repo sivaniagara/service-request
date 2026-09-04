@@ -3,56 +3,40 @@ import 'package:equatable/equatable.dart';
 class TechnicianTicket extends Equatable {
   final String ticketId;
   final String ticketNumber;
-  final String title;
-  final String category;
+  final String description;
+  final String productName;
+  final List<String> issueCategory;
   final String priority;
   final String status;
-  final String equipmentModel;
-  final String equipmentSerialNo;
   final TicketCustomer customer;
-  final DelegatedSubDealer delegatedSubDealer;
-  final String? scheduledTime;
-  final List<TicketStepperStep> stepperSteps;
-  final List<TicketTimelineEvent> timelineEvents;
-  final String supportMode; // Remote or Site Visit
+  final String supportMode;
+  final String createdAt;
 
   const TechnicianTicket({
     required this.ticketId,
     required this.ticketNumber,
-    required this.title,
-    required this.category,
+    required this.description,
+    required this.productName,
+    required this.issueCategory,
     required this.priority,
     required this.status,
-    required this.equipmentModel,
-    required this.equipmentSerialNo,
     required this.customer,
-    required this.delegatedSubDealer,
-    this.scheduledTime,
-    required this.stepperSteps,
-    required this.timelineEvents,
-    this.supportMode = 'Site Visit',
+    required this.supportMode,
+    required this.createdAt,
   });
 
   factory TechnicianTicket.fromJson(Map<String, dynamic> json) {
     return TechnicianTicket(
       ticketId: json['ticketId'] ?? '',
       ticketNumber: json['ticketNumber'] ?? '',
-      title: json['title'] ?? '',
-      category: json['category'] ?? '',
+      description: json['description'] ?? '',
+      productName: json['productName'] ?? '',
+      issueCategory: List<String>.from(json['issueCategory'] ?? []),
       priority: json['priority'] ?? '',
       status: json['status'] ?? '',
-      equipmentModel: json['equipmentModel'] ?? '',
-      equipmentSerialNo: json['equipmentSerialNo'] ?? '',
       customer: TicketCustomer.fromJson(json['customer'] ?? {}),
-      delegatedSubDealer: DelegatedSubDealer.fromJson(json['delegatedSubDealer'] ?? {}),
-      scheduledTime: json['scheduledTime'],
-      stepperSteps: (json['stepperSteps'] as List? ?? [])
-          .map((i) => TicketStepperStep.fromJson(i))
-          .toList(),
-      timelineEvents: (json['timelineEvents'] as List? ?? [])
-          .map((i) => TicketTimelineEvent.fromJson(i))
-          .toList(),
       supportMode: json['supportMode'] ?? 'Site Visit',
+      createdAt: json['createdAt'] ?? '',
     );
   }
 
@@ -63,18 +47,122 @@ class TechnicianTicket extends Equatable {
     return TechnicianTicket(
       ticketId: ticketId,
       ticketNumber: ticketNumber,
-      title: title,
-      category: category,
+      description: description,
+      productName: productName,
+      issueCategory: issueCategory,
       priority: priority,
       status: status ?? this.status,
-      equipmentModel: equipmentModel,
-      equipmentSerialNo: equipmentSerialNo,
       customer: customer,
-      delegatedSubDealer: delegatedSubDealer,
-      scheduledTime: scheduledTime,
-      stepperSteps: stepperSteps,
-      timelineEvents: timelineEvents,
       supportMode: supportMode ?? this.supportMode,
+      createdAt: createdAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        ticketId,
+        ticketNumber,
+        description,
+        productName,
+        issueCategory,
+        priority,
+        status,
+        customer,
+        supportMode,
+        createdAt,
+      ];
+}
+
+class TicketCustomer extends Equatable {
+  final String name;
+  final String phone;
+  final String siteLocation;
+
+  const TicketCustomer({
+    required this.name,
+    required this.phone,
+    required this.siteLocation,
+  });
+
+  factory TicketCustomer.fromJson(Map<String, dynamic> json) {
+    return TicketCustomer(
+      name: json['name'] ?? '',
+      phone: json['phone'] ?? '',
+      siteLocation: json['siteLocation'] ?? '',
+    );
+  }
+
+  @override
+  List<Object?> get props => [name, phone, siteLocation];
+}
+
+class TechnicianTicketDetail extends Equatable {
+  final String ticketId;
+  final String ticketNumber;
+  final String? title;
+  final String? description;
+  final List<String> issueCategory;
+  final String priority;
+  final String status;
+  final String? supportMode;
+  final String siteLocation;
+  final String? preferredSlot;
+  final String createdAt;
+  final TicketCustomer? customer;
+  final List<TicketMilestone> stepperMilestones;
+  final List<TicketTimelineEvent> timelineEvents;
+  final List<String> attachedPhotos;
+  final List<String> requiredSkills;
+  final String? equipmentModel;
+  final String? equipmentSerialNo;
+
+  const TechnicianTicketDetail({
+    required this.ticketId,
+    required this.ticketNumber,
+    this.title,
+    this.description,
+    required this.issueCategory,
+    required this.priority,
+    required this.status,
+    this.supportMode,
+    required this.siteLocation,
+    this.preferredSlot,
+    required this.createdAt,
+    this.customer,
+    required this.stepperMilestones,
+    required this.timelineEvents,
+    required this.attachedPhotos,
+    required this.requiredSkills,
+    this.equipmentModel,
+    this.equipmentSerialNo,
+  });
+
+  factory TechnicianTicketDetail.fromJson(Map<String, dynamic> json) {
+    return TechnicianTicketDetail(
+      ticketId: json['ticketId'] ?? '',
+      ticketNumber: json['ticketNumber'] ?? '',
+      title: json['title'] ?? json['description'],
+      description: json['description'],
+      issueCategory: List<String>.from(json['issueCategory'] ?? []),
+      priority: json['priority'] ?? '',
+      status: json['status'] ?? '',
+      supportMode: json['supportMode'],
+      siteLocation: json['siteLocation'] ?? '',
+      preferredSlot: json['preferredSlot'],
+      createdAt: json['createdAt'] ?? '',
+      customer: json['customer'] != null ? TicketCustomer.fromJson(json['customer']) : null,
+      stepperMilestones: (json['stepperMilestones'] as List?)
+              ?.map((e) => TicketMilestone.fromJson(e))
+              .toList() ??
+          [],
+      timelineEvents: (json['timelineEvents'] as List?)
+              ?.map((e) => TicketTimelineEvent.fromJson(e))
+              .toList() ??
+          [],
+      attachedPhotos: List<String>.from(json['attachedPhotos'] ?? []),
+      requiredSkills: List<String>.from(json['requiredSkills'] ?? []),
+      equipmentModel: json['equipmentModel'] ?? json['productName'],
+      equipmentSerialNo: json['equipmentSerialNo'],
     );
   }
 
@@ -83,82 +171,36 @@ class TechnicianTicket extends Equatable {
         ticketId,
         ticketNumber,
         title,
-        category,
+        description,
+        issueCategory,
         priority,
         status,
+        supportMode,
+        siteLocation,
+        preferredSlot,
+        createdAt,
+        customer,
+        stepperMilestones,
+        timelineEvents,
+        attachedPhotos,
+        requiredSkills,
         equipmentModel,
         equipmentSerialNo,
-        customer,
-        delegatedSubDealer,
-        scheduledTime,
-        stepperSteps,
-        timelineEvents,
-        supportMode,
       ];
 }
 
-class TicketCustomer extends Equatable {
-  final String id;
-  final String name;
-  final String phone;
-  final String siteLocation;
-
-  const TicketCustomer({
-    required this.id,
-    required this.name,
-    required this.phone,
-    required this.siteLocation,
-  });
-
-  factory TicketCustomer.fromJson(Map<String, dynamic> json) {
-    return TicketCustomer(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      phone: json['phone'] ?? '',
-      siteLocation: json['siteLocation'] ?? '',
-    );
-  }
-
-  @override
-  List<Object?> get props => [id, name, phone, siteLocation];
-}
-
-class DelegatedSubDealer extends Equatable {
-  final String id;
-  final String name;
-  final String contactPerson;
-  final String phone;
-
-  const DelegatedSubDealer({
-    required this.id,
-    required this.name,
-    required this.contactPerson,
-    required this.phone,
-  });
-
-  factory DelegatedSubDealer.fromJson(Map<String, dynamic> json) {
-    return DelegatedSubDealer(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      contactPerson: json['contactPerson'] ?? '',
-      phone: json['phone'] ?? '',
-    );
-  }
-
-  @override
-  List<Object?> get props => [id, name, contactPerson, phone];
-}
-
-class TicketStepperStep extends Equatable {
+class TicketMilestone extends Equatable {
   final int stepOrder;
+  final String key;
   final String title;
   final String description;
   final String status;
   final String? updatedAt;
   final String? updatedBy;
 
-  const TicketStepperStep({
+  const TicketMilestone({
     required this.stepOrder,
+    required this.key,
     required this.title,
     required this.description,
     required this.status,
@@ -166,9 +208,10 @@ class TicketStepperStep extends Equatable {
     this.updatedBy,
   });
 
-  factory TicketStepperStep.fromJson(Map<String, dynamic> json) {
-    return TicketStepperStep(
-      stepOrder: json['id'] ?? json['stepOrder'] ?? 0,
+  factory TicketMilestone.fromJson(Map<String, dynamic> json) {
+    return TicketMilestone(
+      stepOrder: json['stepOrder'] ?? 0,
+      key: json['key'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       status: json['status'] ?? '',
@@ -178,7 +221,7 @@ class TicketStepperStep extends Equatable {
   }
 
   @override
-  List<Object?> get props => [stepOrder, title, description, status, updatedAt, updatedBy];
+  List<Object?> get props => [stepOrder, key, title, description, status, updatedAt, updatedBy];
 }
 
 class TicketTimelineEvent extends Equatable {
@@ -186,12 +229,18 @@ class TicketTimelineEvent extends Equatable {
   final String timestamp;
   final String title;
   final String description;
+  final String actor;
+  final String actorRole;
+  final String badgeType;
 
   const TicketTimelineEvent({
     required this.id,
     required this.timestamp,
     required this.title,
     required this.description,
+    required this.actor,
+    required this.actorRole,
+    required this.badgeType,
   });
 
   factory TicketTimelineEvent.fromJson(Map<String, dynamic> json) {
@@ -200,9 +249,12 @@ class TicketTimelineEvent extends Equatable {
       timestamp: json['timestamp'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
+      actor: json['actor'] ?? '',
+      actorRole: json['actorRole'] ?? '',
+      badgeType: json['badgeType'] ?? '',
     );
   }
 
   @override
-  List<Object?> get props => [id, timestamp, title, description];
+  List<Object?> get props => [id, timestamp, title, description, actor, actorRole, badgeType];
 }

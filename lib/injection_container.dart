@@ -17,6 +17,9 @@ import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
+import 'features/service_person/data/datasources/technician_remote_data_source.dart';
+import 'features/service_person/data/repositories/technician_repository.dart';
+import 'features/service_person/presentation/bloc/technician_dashboard_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -63,6 +66,11 @@ Future<void> init() async {
   sl.registerFactory(() => DealerDashboardCubit(repository: sl()));
   sl.registerLazySingleton<DealerRepository>(() => DealerRepositoryImpl(remoteDataSource: sl()));
   sl.registerLazySingleton<DealerRemoteDataSource>(() => DealerRemoteDataSourceImpl(httpService: sl()));
+
+  // Features - Technician Dashboard
+  sl.registerFactory(() => TechnicianDashboardCubit(repository: sl()));
+  sl.registerLazySingleton<TechnicianRepository>(() => TechnicianRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<TechnicianRemoteDataSource>(() => TechnicianRemoteDataSourceImpl(httpService: sl()));
 
   // External
   sl.registerLazySingleton(() => http.Client());

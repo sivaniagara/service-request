@@ -222,7 +222,10 @@ class DealerDashboardPage extends StatelessWidget {
           onPressed: () {
             showDialog(
               context: context,
-              builder: (context) => const AddTechnicianDialog(),
+              builder: (innerContext) => BlocProvider.value(
+                value: context.read<DealerDashboardCubit>(),
+                child: const AddTechnicianDialog(),
+              ),
             );
           },
           icon: const Icon(Icons.add, size: 20),

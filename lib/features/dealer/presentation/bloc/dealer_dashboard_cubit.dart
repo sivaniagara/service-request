@@ -34,7 +34,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
       if (tickets.isNotEmpty) {
         loadTicketDetail(tickets.first.ticketId);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadTickets error: $e");
+      debugPrint("loadTickets stackTrace: $stackTrace");
       emit(state.copyWith(isTicketsLoading: false, error: e.toString()));
     }
   }
@@ -44,7 +46,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
     try {
       final detail = await repository.getDealerTicketDetail(ticketId);
       emit(state.copyWith(isDetailLoading: false, selectedTicketDetail: detail));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadTicketDetail error: $e");
+      debugPrint("loadTicketDetail stackTrace: $stackTrace");
       emit(state.copyWith(isDetailLoading: false, error: e.toString()));
     }
   }
@@ -54,7 +58,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
     try {
       final technicians = await repository.getTechnicians();
       emit(state.copyWith(isTechniciansLoading: false, technicians: technicians));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadTechnicians error: $e");
+      debugPrint("loadTechnicians stackTrace: $stackTrace");
       emit(state.copyWith(isTechniciansLoading: false, error: e.toString()));
     }
   }
@@ -68,7 +74,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
         serviceTeamData: data,
         technicians: data.technicians,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadServiceTeam error: $e");
+      debugPrint("loadServiceTeam stackTrace: $stackTrace");
       emit(state.copyWith(isTechniciansLoading: false, error: e.toString()));
       rethrow;
     }
@@ -164,7 +172,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
         }
       });
       emit(state.copyWith(isReportLoading: false, performanceReport: report));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("loadPerformanceReport error: $e");
+      debugPrint("loadPerformanceReport stackTrace: $stackTrace");
       emit(state.copyWith(isReportLoading: false, error: e.toString()));
     }
   }
@@ -172,54 +182,27 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
   Future<void> loadSubDealers() async {
     emit(state.copyWith(isSubDealersLoading: true, error: null));
     try {
-      // Mock data for Sub Dealers
-      await Future.delayed(const Duration(milliseconds: 500));
-      final List<SubDealer> subDealers = [
-        SubDealer(
-          id: 'SD-001',
-          branchName: 'Salem West Branch',
-          location: 'Salem, TN',
-          technicianCount: 12,
-          rating: 4.8,
-          isActive: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 120)),
-          contactNumber: '+91 98765 43210',
-          managerName: 'Rajesh Kumar',
-        ),
-        SubDealer(
-          id: 'SD-002',
-          branchName: 'Erode East Hub',
-          location: 'Erode, TN',
-          technicianCount: 8,
-          rating: 4.5,
-          isActive: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 95)),
-          contactNumber: '+91 98765 43211',
-          managerName: 'Suresh Raina',
-        ),
-        SubDealer(
-          id: 'SD-003',
-          branchName: 'Madurai North Service',
-          location: 'Madurai, TN',
-          technicianCount: 15,
-          rating: 4.2,
-          isActive: false,
-          createdAt: DateTime.now().subtract(const Duration(days: 200)),
-          contactNumber: '+91 98765 43212',
-          managerName: 'Vijay Sethu',
-        ),
-      ];
-      emit(state.copyWith(isSubDealersLoading: false, subDealers: subDealers));
-    } catch (e) {
+      final data = await repository.getSubDealers();
+      emit(state.copyWith(isSubDealersLoading: false, subDealerData: data));
+    } catch (e, stackTrace) {
+      debugPrint("loadSubDealers error: $e");
+      debugPrint("loadSubDealers stackTrace: $stackTrace");
       emit(state.copyWith(isSubDealersLoading: false, error: e.toString()));
     }
   }
 
-  Future<void> addSubDealer(SubDealer subDealer) async {
-    // In a real app, this would call the repository
-    final currentSubDealers = List<SubDealer>.from(state.subDealers ?? []);
-    currentSubDealers.add(subDealer);
-    emit(state.copyWith(subDealers: currentSubDealers));
+  Future<void> addSubDealer(Map<String, dynamic> data) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await repository.addSubDealer(data);
+      await loadSubDealers();
+      emit(state.copyWith(isLoading: false));
+    } catch (e, stackTrace) {
+      debugPrint("addSubDealer error: $e");
+      debugPrint("addSubDealer stackTrace: $stackTrace");
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+      rethrow;
+    }
   }
 
   void selectTicket(String ticketId) {
@@ -240,18 +223,20 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
       loadServiceTeam();
     } else if (tab == DealerDashboardTab.reports && state.performanceReport == null) {
       loadPerformanceReport();
-    } else if (tab == DealerDashboardTab.subDealerManagement && state.subDealers == null) {
+    } else if (tab == DealerDashboardTab.subDealerManagement && state.subDealerData == null) {
       loadSubDealers();
     }
   }
 
-  Future<void> assignTechnician(String ticketId, String technicianId, String notes) async {
+  Future<void> assignTechnicians(String ticketId, List<String> technicianIds, String notes) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      await repository.assignTechnician(ticketId, technicianId, notes);
+      await repository.assignTechnicians(ticketId, technicianIds, notes);
       await loadTicketDetail(ticketId); // Refresh details
       emit(state.copyWith(isLoading: false));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("assignTechnicians error: $e");
+      debugPrint("assignTechnicians stackTrace: $stackTrace");
       emit(state.copyWith(isLoading: false, error: e.toString()));
       rethrow;
     }
@@ -263,7 +248,9 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
       await repository.addTechnician(data);
       await loadServiceTeam(); // Refresh the team list
       emit(state.copyWith(isLoading: false));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("addTechnician error: $e");
+      debugPrint("addTechnician stackTrace: $stackTrace");
       emit(state.copyWith(isLoading: false, error: e.toString()));
       rethrow;
     }

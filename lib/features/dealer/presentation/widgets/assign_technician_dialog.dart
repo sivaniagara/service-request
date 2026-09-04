@@ -17,13 +17,20 @@ class AssignTechnicianDialog extends StatefulWidget {
 }
 
 class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
-  String? _selectedTechId;
+  final Set<String> _selectedTechIds = {};
   final _notesController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     context.read<DealerDashboardCubit>().loadTechnicians();
+    
+    // Auto-select technicians if any are already assigned
+    if (widget.ticket.assignedTechnicians.isNotEmpty) {
+      _selectedTechIds.addAll(
+        widget.ticket.assignedTechnicians.map((t) => t.technicianId),
+      );
+    }
   }
 
   @override
@@ -234,11 +241,15 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
   }
 
   Widget _buildTechnicianItem(DealerTechnician tech) {
-    final isSelected = _selectedTechId == tech.technicianId;
+    final isSelected = _selectedTechIds.contains(tech.technicianId);
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedTechId = tech.technicianId;
+          if (isSelected) {
+            _selectedTechIds.remove(tech.technicianId);
+          } else {
+            _selectedTechIds.add(tech.technicianId);
+          }
         });
       },
       child: Container(
@@ -285,7 +296,21 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                         '${tech.rating}★',
                         style: const TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.bold),
                       ),
-                      ...[
+                      if (tech.travelDistance != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.blue100.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            tech.travelDistance!,
+                            style: const TextStyle(color: AppColors.blue500, fontSize: 9, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                      if (tech.totalResolved > 20) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -294,7 +319,7 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
-                            'Skills Match',
+                            'Expert',
                             style: TextStyle(color: Colors.green, fontSize: 9, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -401,9 +426,11 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                   ),
                   const TextSpan(text: 'Once dispatched, the customer will see '),
                   TextSpan(
-                    text: _selectedTechId != null 
-                        ? context.read<DealerDashboardCubit>().state.technicians?.firstWhere((t) => t.technicianId == _selectedTechId).name ?? 'the technician'
-                        : 'the technician',
+                    text: _selectedTechIds.isEmpty
+                        ? 'the technicians'
+                        : _selectedTechIds.length == 1
+                            ? context.read<DealerDashboardCubit>().state.technicians?.firstWhere((t) => t.technicianId == _selectedTechIds.first).name ?? 'the technician'
+                            : '${_selectedTechIds.length} technicians',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const TextSpan(text: ' listed on their ticket page with direct contact details and live stepper progression.'),
@@ -437,7 +464,7 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
           ),
           const SizedBox(width: 16),
           ElevatedButton(
-            onPressed: _selectedTechId == null 
+            onPressed: _selectedTechIds.isEmpty
                 ? null 
                 : () async {
                     // Show Loading
@@ -448,9 +475,9 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                     );
 
                     try {
-                      await context.read<DealerDashboardCubit>().assignTechnician(
+                      await context.read<DealerDashboardCubit>().assignTechnicians(
                         widget.ticket.ticketId,
-                        _selectedTechId!,
+                        _selectedTechIds.toList(),
                         _notesController.text,
                       );
 

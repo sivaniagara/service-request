@@ -40,7 +40,9 @@ class AppRouter {
           return RouteNames.adminDashboard;
         } else if (role == 'Dealer') {
           return RouteNames.dealerDashboard;
-        } else if (role == 'ServicePerson') {
+        } else if (role == 'Sub Dealer') {
+          return RouteNames.dealerDashboard;
+        } else if (role == 'Technician') {
           return RouteNames.technicianDashboard;
         } else {
           return RouteNames.customerDashboard;

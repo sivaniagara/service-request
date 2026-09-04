@@ -4,16 +4,16 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/kpi_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
-import '../../data/models/technician_model.dart';
+import '../../data/models/technician_dashboard_model.dart';
 
 class TechnicianDashboardView extends StatelessWidget {
-  final TechnicianProfile profile;
+  final TechnicianDashboardData data;
   final VoidCallback onOpenQueue;
   final Function(String ticketId) onViewTicket;
 
   const TechnicianDashboardView({
     super.key,
-    required this.profile,
+    required this.data,
     required this.onOpenQueue,
     required this.onViewTicket,
   });
@@ -50,7 +50,9 @@ class TechnicianDashboardView extends StatelessWidget {
             radius: 35,
             backgroundColor: AppColors.amber500,
             child: Text(
-              profile.technician.name.split(' ').map((e) => e[0]).join(''),
+              data.profile.name.isNotEmpty 
+                  ? data.profile.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').join('')
+                  : '??',
               style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
@@ -62,7 +64,7 @@ class TechnicianDashboardView extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      profile.technician.name,
+                      data.profile.name,
                       style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 12),
@@ -73,9 +75,9 @@ class TechnicianDashboardView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
-                      child: const Text(
-                        'Field Technician',
-                        style: TextStyle(color: AppColors.green500, fontSize: 12, fontWeight: FontWeight.bold),
+                      child: Text(
+                        data.profile.role,
+                        style: const TextStyle(color: AppColors.green500, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -84,17 +86,17 @@ class TechnicianDashboardView extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      profile.technician.dealerName,
+                      data.profile.dealerName,
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      '•  ${profile.technician.phone}',
+                      '•  ${data.profile.phone}',
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      '•  ${profile.technician.email}',
+                      '•  ${data.profile.email}',
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
                     ),
                   ],
@@ -122,9 +124,9 @@ class TechnicianDashboardView extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 12.0),
             child: Text('Status:', style: TextStyle(color: Colors.white70, fontSize: 13)),
           ),
-          _buildStatusItem('Available', isSelected: profile.technician.availabilityStatus == 'Available'),
-          _buildStatusItem('On job', isSelected: profile.technician.availabilityStatus == 'On job'),
-          _buildStatusItem('Offline', isSelected: profile.technician.availabilityStatus == 'Offline'),
+          _buildStatusItem('Available', isSelected: data.profile.availabilityStatus == 'Available'),
+          _buildStatusItem('On job', isSelected: data.profile.availabilityStatus == 'On job'),
+          _buildStatusItem('Offline', isSelected: data.profile.availabilityStatus == 'Offline'),
         ],
       ),
     );
@@ -154,8 +156,8 @@ class TechnicianDashboardView extends StatelessWidget {
         Expanded(
           child: KPICard(
             title: 'Active Assignments',
-            value: profile.metrics.activeJobsCount.toString(),
-            subtitle: '${profile.metrics.criticalJobsCount} high priority',
+            value: data.stats.activeAssignments.toString(),
+            subtitle: '${data.stats.highPriorityCount} high priority',
             subtitleColor: AppColors.amber500,
             icon: Icons.build_outlined,
             iconColor: AppColors.blue500,
@@ -165,8 +167,8 @@ class TechnicianDashboardView extends StatelessWidget {
         Expanded(
           child: KPICard(
             title: 'Resolved Overall',
-            value: profile.metrics.completedJobsCount.toString(),
-            subtitle: '98.2% on-time resolution',
+            value: data.stats.resolvedOverall.toString(),
+            subtitle: '${data.stats.onTimeResolutionRate} on-time resolution',
             subtitleColor: AppColors.green500,
             icon: Icons.check_circle_outline,
             iconColor: AppColors.green500,
@@ -176,8 +178,8 @@ class TechnicianDashboardView extends StatelessWidget {
         Expanded(
           child: KPICard(
             title: 'Customer Rating',
-            value: profile.metrics.averageRating.toString(),
-            subtitle: 'Based on recent customer reviews',
+            value: data.stats.customerRating.toString(),
+            subtitle: 'Based on recent reviews',
             icon: Icons.star_border,
             iconColor: AppColors.amber500,
             showStar: true,
@@ -187,7 +189,7 @@ class TechnicianDashboardView extends StatelessWidget {
         Expanded(
           child: KPICard(
             title: 'First-Time Fix Rate',
-            value: '${profile.metrics.firstTimeFixRate}%',
+            value: '${data.stats.firstTimeFixRate}%',
             subtitle: 'Zero repeat complaints',
             subtitleColor: AppColors.purple500,
             icon: Icons.workspace_premium_outlined,
@@ -221,11 +223,11 @@ class TechnicianDashboardView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          if (profile.assignedJobs.isEmpty)
+          if (data.activeWorkOrders.isEmpty)
             _buildEmptyWorkOrders()
           else
             Column(
-              children: profile.assignedJobs.map((job) => _buildJobItem(job)).toList(),
+              children: data.activeWorkOrders.map((job) => _buildJobItem(job)).toList(),
             ),
         ],
       ),
@@ -238,7 +240,7 @@ class TechnicianDashboardView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 40),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.line, style: BorderStyle.none),
+        border: Border.all(color: AppColors.line),
       ),
       child: const Column(
         children: [
@@ -252,7 +254,7 @@ class TechnicianDashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildJobItem(AssignedJob job) {
+  Widget _buildJobItem(ActiveWorkOrder job) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -274,19 +276,7 @@ class TechnicianDashboardView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(job.ticketNumber, style: const TextStyle(color: AppColors.ink400, fontSize: 12, fontWeight: FontWeight.bold)),
-                    Row(
-                      children: [
-                        if (job.requiredSkillMatch.isNotEmpty) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: AppColors.blue100, borderRadius: BorderRadius.circular(4)),
-                            child: Text(job.requiredSkillMatch, style: const TextStyle(color: AppColors.blue500, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(job.status, style: const TextStyle(color: AppColors.blue500, fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                    Text(job.status, style: const TextStyle(color: AppColors.blue500, fontSize: 12, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -296,15 +286,15 @@ class TechnicianDashboardView extends StatelessWidget {
                   children: [
                     const Icon(Icons.person_outline, size: 14, color: AppColors.ink400),
                     const SizedBox(width: 6),
-                    Text(job.customerName, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
+                    Text(job.customer.name, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
                     const SizedBox(width: 20),
                     const Icon(Icons.location_on_outlined, size: 14, color: AppColors.ink400),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(job.siteLocation, style: const TextStyle(color: AppColors.ink600, fontSize: 13), overflow: TextOverflow.ellipsis)),
+                    Expanded(child: Text(job.customer.siteLocation, style: const TextStyle(color: AppColors.ink600, fontSize: 13), overflow: TextOverflow.ellipsis)),
                     const SizedBox(width: 20),
                     const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.ink400),
                     const SizedBox(width: 6),
-                    Text('${job.createdAt.day}/${job.createdAt.month}/${job.createdAt.year}', style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
+                    Text(job.createdAt, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
                   ],
                 ),
               ],
@@ -340,7 +330,7 @@ class TechnicianDashboardView extends StatelessWidget {
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: profile.technician.skills.map((skill) => _buildSkillBadge(skill)).toList(),
+            children: data.skills.map((skill) => _buildSkillBadge(skill)).toList(),
           ),
         ],
       ),

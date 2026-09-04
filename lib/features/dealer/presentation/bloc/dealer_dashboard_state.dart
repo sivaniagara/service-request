@@ -18,7 +18,7 @@ class DealerDashboardState {
   final DealerTicketDetail? selectedTicketDetail;
   final List<DealerTechnician>? technicians;
   final DealerServiceTeamModel? serviceTeamData;
-  final List<SubDealer>? subDealers;
+  final SubDealerManagementData? subDealerData;
   final DealerPerformanceReport? performanceReport;
   final bool isTechniciansLoading;
   final String? error;
@@ -36,7 +36,7 @@ class DealerDashboardState {
     this.selectedTicketDetail,
     this.technicians,
     this.serviceTeamData,
-    this.subDealers,
+    this.subDealerData,
     this.performanceReport,
     this.isTechniciansLoading = false,
     this.error,
@@ -55,7 +55,7 @@ class DealerDashboardState {
     DealerTicketDetail? selectedTicketDetail,
     List<DealerTechnician>? technicians,
     DealerServiceTeamModel? serviceTeamData,
-    List<SubDealer>? subDealers,
+    SubDealerManagementData? subDealerData,
     DealerPerformanceReport? performanceReport,
     bool? isTechniciansLoading,
     String? error,
@@ -73,7 +73,7 @@ class DealerDashboardState {
       selectedTicketDetail: selectedTicketDetail ?? this.selectedTicketDetail,
       technicians: technicians ?? this.technicians,
       serviceTeamData: serviceTeamData ?? this.serviceTeamData,
-      subDealers: subDealers ?? this.subDealers,
+      subDealerData: subDealerData ?? this.subDealerData,
       performanceReport: performanceReport ?? this.performanceReport,
       isTechniciansLoading: isTechniciansLoading ?? this.isTechniciansLoading,
       error: error ?? this.error,

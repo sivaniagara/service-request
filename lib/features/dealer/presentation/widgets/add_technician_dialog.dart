@@ -396,38 +396,36 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
                 await context.read<DealerDashboardCubit>().addTechnician(requestBody);
                 
                 // Close loading
-                if (mounted) Navigator.pop(context);
+                if (!mounted) return;
+                Navigator.pop(context);
                 
                 // Show Success
-                if (mounted) {
-                  AwesomeDialog(
-                    context: context,
-                    dialogType: DialogType.success,
-                    animType: AnimType.bottomSlide,
-                    title: 'Success',
-                    desc: 'Field Technician added successfully.',
-                    btnOkOnPress: () {
-                      Navigator.pop(context);
-                    },
-                    width: 400,
-                  ).show();
-                }
+                AwesomeDialog(
+                  context: context,
+                  dialogType: DialogType.success,
+                  animType: AnimType.bottomSlide,
+                  title: 'Success',
+                  desc: 'Field Technician added successfully.',
+                  btnOkOnPress: () {
+                    Navigator.pop(context);
+                  },
+                  width: 400,
+                ).show();
               } catch (e) {
                 // Close loading
-                if (mounted) Navigator.pop(context);
+                if (!mounted) return;
+                Navigator.pop(context);
                 
                 // Show Error
-                if (mounted) {
-                  AwesomeDialog(
-                    context: context,
-                    dialogType: DialogType.error,
-                    animType: AnimType.bottomSlide,
-                    title: 'Error',
-                    desc: e.toString(),
-                    btnOkOnPress: () {},
-                    width: 400,
-                  ).show();
-                }
+                AwesomeDialog(
+                  context: context,
+                  dialogType: DialogType.error,
+                  animType: AnimType.bottomSlide,
+                  title: 'Error',
+                  desc: e.toString(),
+                  btnOkOnPress: () {},
+                  width: 400,
+                ).show();
               }
             }
           },

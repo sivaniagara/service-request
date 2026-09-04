@@ -2,6 +2,7 @@ import '../../../../core/network/http_service.dart';
 import '../models/dealer_dashboard_model.dart';
 import '../models/dealer_ticket_model.dart';
 import '../models/dealer_technician_model.dart';
+import '../models/sub_dealer_model.dart';
 
 abstract class DealerRemoteDataSource {
   Future<DealerDashboardData> getDealerDashboard();
@@ -9,8 +10,10 @@ abstract class DealerRemoteDataSource {
   Future<DealerTicketDetail> getDealerTicketDetail(String ticketId);
   Future<List<DealerTechnician>> getTechnicians();
   Future<DealerServiceTeamModel> getServiceTeam();
+  Future<SubDealerManagementData> getSubDealers();
+  Future<void> addSubDealer(Map<String, dynamic> data);
   Future<void> addTechnician(Map<String, dynamic> data);
-  Future<void> assignTechnician(String ticketId, String technicianId, String notes);
+  Future<void> assignTechnicians(String ticketId, List<String> technicianIds, String notes);
 }
 
 class DealerRemoteDataSourceImpl implements DealerRemoteDataSource {
@@ -49,16 +52,27 @@ class DealerRemoteDataSourceImpl implements DealerRemoteDataSource {
   }
 
   @override
+  Future<SubDealerManagementData> getSubDealers() async {
+    final response = await httpService.get("/api/dealer/sub-dealer");
+    return SubDealerManagementData.fromJson(response['data']);
+  }
+
+  @override
+  Future<void> addSubDealer(Map<String, dynamic> data) async {
+    await httpService.post("/api/dealer/sub-dealer", body: data);
+  }
+
+  @override
   Future<void> addTechnician(Map<String, dynamic> data) async {
     await httpService.post("/api/dealer/technicians", body: data);
   }
 
   @override
-  Future<void> assignTechnician(String ticketId, String technicianId, String notes) async {
+  Future<void> assignTechnicians(String ticketId, List<String> technicianIds, String notes) async {
     await httpService.post(
       "/api/dealer/tickets/$ticketId/assign-technician",
       body: {
-        "technicianId": technicianId,
+        "technicianIds": technicianIds,
         "notes": notes,
       },
     );
