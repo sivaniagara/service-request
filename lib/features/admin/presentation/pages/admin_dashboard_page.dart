@@ -64,14 +64,17 @@ class AdminDashboardPage extends StatelessWidget {
                     NavItem(
                       icon: Icons.build_outlined,
                       label: 'Service Requests',
-                      badge: '1 new',
+                      badge: state.tickets != null 
+                        ? state.tickets!.where((t) => t.status == 'Pending Assignment' || t.status == 'Unassigned').length.toString()
+                        : null,
                       isActive: state.activeTab == AdminDashboardTab.serviceRequests,
                       onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.serviceRequests),
                     ),
                     NavItem(
                       icon: Icons.storefront_outlined,
                       label: 'Dealers',
-                      badge: '4',
+                      badge: state.dealers?.summary?.totalDealers.toString() ?? 
+                             state.dashboardData?.summaryMetrics.activeDealersCount.toString(),
                       isActive: state.activeTab == AdminDashboardTab.dealerManagement,
                       onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.dealerManagement),
                     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -70,6 +71,10 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
                       '9876543210',
                       _phoneController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                       prefixIcon: CountryCodePicker(
                         onChanged: (code) {
@@ -224,6 +229,7 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
     String hint,
     TextEditingController controller, {
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     Widget? prefixIcon,
   }) {
@@ -242,6 +248,7 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           validator: validator,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           decoration: InputDecoration(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../customer/presentation/widgets/complaints/location_picker_dialog.dart';
 import '../bloc/admin_dashboard_cubit.dart';
 
 class AddDealerDialog extends StatefulWidget {
@@ -63,6 +65,10 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
                       '1234567890',
                       _phoneController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                       prefixIcon: CountryCodePicker(
                         onChanged: (code) {
@@ -89,7 +95,22 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
                 ],
               ),
               const SizedBox(height: 24),
-              _buildTextField('Office Address*', 'e.g. 123, Main Road, Coimbatore', _addressController, validator: (v) => v!.isEmpty ? 'Required' : null),
+              _buildTextField(
+                'Office Address*',
+                'Select from map',
+                _addressController,
+                readOnly: true,
+                onTap: () async {
+                  final result = await showDialog<String>(
+                    context: context,
+                    builder: (context) => LocationPickerDialog(initialLocation: _addressController.text),
+                  );
+                  if (result != null) {
+                    setState(() => _addressController.text = result);
+                  }
+                },
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -154,7 +175,7 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller, {TextInputType? keyboardType, Widget? prefixIcon, String? Function(String?)? validator}) {
+  Widget _buildTextField(String label, String hint, TextEditingController controller, {TextInputType? keyboardType, List<TextInputFormatter>? inputFormatters, Widget? prefixIcon, bool readOnly = false, VoidCallback? onTap, String? Function(String?)? validator}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,6 +187,9 @@ class _AddDealerDialogState extends State<AddDealerDialog> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          readOnly: readOnly,
+          onTap: onTap,
           validator: validator,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           decoration: InputDecoration(

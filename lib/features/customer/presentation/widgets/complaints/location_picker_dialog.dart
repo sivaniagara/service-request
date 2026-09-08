@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class LocationPickerDialog extends StatefulWidget {
@@ -20,11 +21,73 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
   final String _apiKey = 'AIzaSyCfMo2V0inDY3xpp91BjfIrD4s-v6PPSzw';
   
   List<dynamic> _suggestions = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.text = widget.initialLocation;
+    if (widget.initialLocation.isEmpty) {
+      _getCurrentLocation();
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isLoading = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition();
+      final latLng = LatLng(position.latitude, position.longitude);
+      
+      setState(() {
+        _selectedLocation = latLng;
+      });
+      
+      _mapController.move(latLng, 15);
+      _getAddressFromLatLng(latLng);
+    } catch (e) {
+      debugPrint('Error getting current location: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _getAddressFromLatLng(LatLng point) async {
+    final url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=${point.latitude},${point.longitude}&key=$_apiKey';
+    
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'OK' && data['results'].isNotEmpty) {
+          setState(() {
+            _searchController.text = data['results'][0]['formatted_address'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reverse geocoding: $e');
+    }
+  }
 
   void _onTap(TapPosition tapPosition, LatLng point) {
     setState(() {
       _selectedLocation = point;
     });
+    _getAddressFromLatLng(point);
   }
 
   Future<void> _fetchSuggestions(String input) async {
@@ -119,6 +182,20 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
                     ],
                   ),
                   _buildSearchOverlay(),
+                  if (_isLoading)
+                    Container(
+                      color: Colors.black26,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                  Positioned(
+                    bottom: 20,
+                    right: 20,
+                    child: FloatingActionButton(
+                      onPressed: _getCurrentLocation,
+                      backgroundColor: Colors.white,
+                      child: const Icon(Icons.my_location, color: AppColors.blue500),
+                    ),
+                  ),
                 ],
               ),
             ),

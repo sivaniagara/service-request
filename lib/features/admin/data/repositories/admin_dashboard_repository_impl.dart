@@ -14,6 +14,9 @@ abstract class AdminDashboardRepository {
   Future<AdminSlaComplianceModel> getSlaCompliance();
   Future<void> addDealer(Map<String, dynamic> data);
   Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions);
+  Future<void> verifyCompletion(String ticketId, String notes);
+  Future<void> sendCloseOtp(String ticketId);
+  Future<void> verifyCloseOtp(String ticketId, String otp);
 }
 
 class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
@@ -59,5 +62,20 @@ class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
   @override
   Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions) async {
     await remoteDataSource.assignDealer(ticketId, dealerIds, instructions);
+  }
+
+  @override
+  Future<void> verifyCompletion(String ticketId, String notes) async {
+    await remoteDataSource.verifyCompletion(ticketId, notes);
+  }
+
+  @override
+  Future<void> sendCloseOtp(String ticketId) async {
+    await remoteDataSource.sendCloseOtp(ticketId);
+  }
+
+  @override
+  Future<void> verifyCloseOtp(String ticketId, String otp) async {
+    await remoteDataSource.verifyCloseOtp(ticketId, otp);
   }
 }

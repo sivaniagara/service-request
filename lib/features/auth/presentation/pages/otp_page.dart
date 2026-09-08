@@ -80,7 +80,7 @@ class _OtpPageState extends State<OtpPage> {
                   context.go(RouteNames.adminDashboard);
                 } else if (role == 'Dealer') {
                   context.go(RouteNames.dealerDashboard);
-                } else if (role == 'ServicePerson') {
+                } else if (role == 'Technician') {
                   context.go(RouteNames.technicianDashboard);
                 } else {
                   context.go(RouteNames.customerDashboard);

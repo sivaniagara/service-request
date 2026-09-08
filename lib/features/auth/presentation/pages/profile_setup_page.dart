@@ -6,6 +6,7 @@ import '../../../../core/network/token_manager.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../injection_container.dart';
+import '../../../customer/presentation/widgets/complaints/location_picker_dialog.dart';
 import '../widgets/auth_layout.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
@@ -64,7 +65,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     switch (role) {
       case UserRole.admin: return 'Admin';
       case UserRole.dealer: return 'Dealer';
-      case UserRole.servicePerson: return 'ServicePerson';
+      case UserRole.servicePerson: return 'Technician';
       case UserRole.customer: return 'Customer';
     }
   }
@@ -93,7 +94,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                 context.go(RouteNames.adminDashboard);
               } else if (role == 'Dealer') {
                 context.go(RouteNames.dealerDashboard);
-              } else if (role == 'ServicePerson') {
+              } else if (role == 'Technician') {
                 context.go(RouteNames.technicianDashboard);
               } else {
                 context.go(RouteNames.customerDashboard);
@@ -210,8 +211,18 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: _addressController,
+                  readOnly: true,
+                  onTap: () async {
+                    final result = await showDialog<String>(
+                      context: context,
+                      builder: (context) => LocationPickerDialog(initialLocation: _addressController.text),
+                    );
+                    if (result != null) {
+                      setState(() => _addressController.text = result);
+                    }
+                  },
                   decoration: InputDecoration(
-                    hintText: 'Enter your address (Optional)',
+                    hintText: 'Select your address from map',
                     prefixIcon: const Icon(Icons.location_on_outlined, color: AppColors.ink400),
                     border: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey.shade300),
@@ -225,43 +236,43 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     filled: false,
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Select Role',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.ink400,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<UserRole>(
-                  value: _selectedRole,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.ink400),
-                    border: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: AppColors.navy900),
-                    ),
-                    filled: false,
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: UserRole.customer, child: Text('Customer')),
-                    DropdownMenuItem(value: UserRole.dealer, child: Text('Dealer')),
-                    DropdownMenuItem(value: UserRole.admin, child: Text('Admin')),
-                    DropdownMenuItem(value: UserRole.servicePerson, child: Text('Service Person')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedRole = value!;
-                    });
-                  },
-                ),
+                // const SizedBox(height: 24),
+                // const Text(
+                //   'Select Role',
+                //   style: TextStyle(
+                //     fontSize: 14,
+                //     color: AppColors.ink400,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
+                // const SizedBox(height: 8),
+                // DropdownButtonFormField<UserRole>(
+                //   value: _selectedRole,
+                //   decoration: InputDecoration(
+                //     prefixIcon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.ink400),
+                //     border: UnderlineInputBorder(
+                //       borderSide: BorderSide(color: Colors.grey.shade300),
+                //     ),
+                //     enabledBorder: UnderlineInputBorder(
+                //       borderSide: BorderSide(color: Colors.grey.shade300),
+                //     ),
+                //     focusedBorder: const UnderlineInputBorder(
+                //       borderSide: BorderSide(color: AppColors.navy900),
+                //     ),
+                //     filled: false,
+                //   ),
+                //   items: const [
+                //     DropdownMenuItem(value: UserRole.customer, child: Text('Customer')),
+                //     DropdownMenuItem(value: UserRole.dealer, child: Text('Dealer')),
+                //     DropdownMenuItem(value: UserRole.admin, child: Text('Admin')),
+                //     DropdownMenuItem(value: UserRole.servicePerson, child: Text('Service Person')),
+                //   ],
+                //   onChanged: (value) {
+                //     setState(() {
+                //       _selectedRole = value!;
+                //     });
+                //   },
+                // ),
                 const SizedBox(height: 48),
                 SizedBox(
                   width: double.infinity,

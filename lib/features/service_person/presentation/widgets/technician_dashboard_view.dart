@@ -83,18 +83,18 @@ class TechnicianDashboardView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 4,
                   children: [
                     Text(
                       data.profile.dealerName,
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
                     ),
-                    const SizedBox(width: 16),
                     Text(
                       '•  ${data.profile.phone}',
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
                     ),
-                    const SizedBox(width: 16),
                     Text(
                       '•  ${data.profile.email}',
                       style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),

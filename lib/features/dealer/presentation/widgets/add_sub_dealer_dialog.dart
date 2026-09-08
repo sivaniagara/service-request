@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../customer/presentation/widgets/complaints/location_picker_dialog.dart';
 import '../../data/models/sub_dealer_model.dart';
 import '../bloc/dealer_dashboard_cubit.dart';
 
@@ -73,6 +75,10 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
                       '9876543210',
                       _phoneController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                       prefixIcon: CountryCodePicker(
                         onChanged: (code) {
@@ -108,8 +114,18 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
               const SizedBox(height: 24),
               _buildTextField(
                 'Office Address / Location*',
-                'e.g. 123, Main Road, Pollachi, TN',
+                'Select from map',
                 _locationController,
+                readOnly: true,
+                onTap: () async {
+                  final result = await showDialog<String>(
+                    context: context,
+                    builder: (context) => LocationPickerDialog(initialLocation: _locationController.text),
+                  );
+                  if (result != null) {
+                    setState(() => _locationController.text = result);
+                  }
+                },
                 validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 24),
@@ -195,7 +211,10 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
     String hint,
     TextEditingController controller, {
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     Widget? prefixIcon,
+    bool readOnly = false,
+    VoidCallback? onTap,
     String? Function(String?)? validator,
   }) {
     return Column(
@@ -209,6 +228,9 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          readOnly: readOnly,
+          onTap: onTap,
           validator: validator,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           decoration: InputDecoration(

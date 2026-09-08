@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/models/admin_ticket_model.dart';
 import '../../data/repositories/admin_dashboard_repository_impl.dart';
 import 'admin_dashboard_state.dart';
 
@@ -24,12 +25,31 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final model = await repository.getAdminTickets();
+      
+      // Safety Merge: If we have dealers from the management API, ensure they are in the assignment list
+      List<AdminDealerListItem> mergedList = List.from(model.dealerList);
+      if (state.dealers != null) {
+        for (final dealerData in state.dealers!.data) {
+          final exists = mergedList.any((d) => d.dealerId == dealerData.dealerId);
+          if (!exists) {
+            mergedList.add(AdminDealerListItem(
+              dealerId: dealerData.dealerId,
+              dealerCode: dealerData.dealerCode,
+              name: dealerData.name,
+              region: dealerData.region,
+              rating: dealerData.performance.rating,
+              techniciansCount: 0, // Default for newly added dealers until synced
+            ));
+          }
+        }
+      }
+
       emit(state.copyWith(
         isLoading: false,
         tickets: model.data,
-        dealerList: model.dealerList,
+        dealerList: mergedList,
       ));
-      if (model.data.isNotEmpty) {
+      if (model.data.isNotEmpty && state.selectedTicket == null) {
         selectTicket(model.data.first.ticketId);
       }
     } catch (e, stackTrace) {
@@ -99,7 +119,12 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       await repository.addDealer(data);
-      await loadDealers(); // Refresh the table
+      
+      // Force refresh all relevant data sources to ensure consistency
+      await loadDashboard();
+      await loadDealers();
+      await loadTickets();
+      
       emit(state.copyWith(isLoading: false));
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));
@@ -116,6 +141,38 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));
       rethrow;
+    }
+  }
+
+  Future<void> verifyCompletion(String ticketId, String notes) async {
+    emit(state.copyWith(isVerifyingCompletion: true, error: null, verifyCompletionSuccess: null));
+    try {
+      await repository.verifyCompletion(ticketId, notes);
+      await selectTicket(ticketId); // Refresh ticket details to see updated milestone
+      emit(state.copyWith(isVerifyingCompletion: false, verifyCompletionSuccess: true));
+    } catch (e) {
+      emit(state.copyWith(isVerifyingCompletion: false, verifyCompletionSuccess: false, error: e.toString()));
+    }
+  }
+
+  Future<void> sendCloseOtp(String ticketId) async {
+    emit(state.copyWith(isSendingOtp: true, error: null, otpSentSuccess: null));
+    try {
+      await repository.sendCloseOtp(ticketId);
+      emit(state.copyWith(isSendingOtp: false, otpSentSuccess: true));
+    } catch (e) {
+      emit(state.copyWith(isSendingOtp: false, otpSentSuccess: false, error: e.toString()));
+    }
+  }
+
+  Future<void> verifyCloseOtp(String ticketId, String otp) async {
+    emit(state.copyWith(isClosingTicket: true, error: null, closeTicketSuccess: null));
+    try {
+      await repository.verifyCloseOtp(ticketId, otp);
+      await selectTicket(ticketId); // Refresh to see "Closed" status
+      emit(state.copyWith(isClosingTicket: false, closeTicketSuccess: true));
+    } catch (e) {
+      emit(state.copyWith(isClosingTicket: false, closeTicketSuccess: false, error: e.toString()));
     }
   }
 }

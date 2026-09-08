@@ -97,13 +97,15 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
                     _buildSectionHeader('CUSTOMER CONTACT'),
                     const SizedBox(height: 16),
                     _buildCustomerContact(),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 20),
                   ],
+                  const SizedBox(height: 16),
+                  _buildClosureSection(),
+                  const SizedBox(height: 16),
                   _buildSectionHeader('TIMELINE LOG'),
                   const SizedBox(height: 16),
                   _buildTimeline(widget.ticket.timelineEvents),
-                  const SizedBox(height: 48),
-                  _buildClosureSection(),
+
                 ],
               ),
             ),
@@ -469,72 +471,52 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Close Out Job',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: AppColors.navy900,
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader('DIAGNOSIS NOTES'),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _notesController,
-          maxLines: 4,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: 'Describe root cause and resolution...',
-            hintStyle: const TextStyle(color: AppColors.ink400, fontWeight: FontWeight.w400),
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.line),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildSectionHeader('WORK PROOF'),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.add_a_photo, size: 16),
-              label: const Text('Add Photo', style: TextStyle(fontWeight: FontWeight.w900)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          children: [
-            ...widget.ticket.attachedPhotos.map((url) => _buildPhotoPlaceholder()),
-            _buildAddPhotoPlaceholder(),
-          ],
-        ),
-        const SizedBox(height: 40),
-        if (widget.ticket.supportMode == null || widget.ticket.supportMode!.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: AppColors.orange500, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Please select a Support Mode (Site Visit / Remote) before completing the task.',
-                    style: TextStyle(
-                      color: AppColors.orange500,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        // const Text(
+        //   'Close Out Job',
+        //   style: TextStyle(
+        //     fontSize: 18,
+        //     fontWeight: FontWeight.w900,
+        //     color: AppColors.navy900,
+        //   ),
+        // ),
+        // const SizedBox(height: 24),
+        // _buildSectionHeader('DIAGNOSIS NOTES'),
+        // const SizedBox(height: 12),
+        // TextField(
+        //   controller: _notesController,
+        //   maxLines: 4,
+        //   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        //   decoration: InputDecoration(
+        //     hintText: 'Describe root cause and resolution...',
+        //     hintStyle: const TextStyle(color: AppColors.ink400, fontWeight: FontWeight.w400),
+        //     fillColor: Colors.white,
+        //     border: OutlineInputBorder(
+        //       borderRadius: BorderRadius.circular(12),
+        //       borderSide: const BorderSide(color: AppColors.line),
+        //     ),
+        //   ),
+        // ),
+        // const SizedBox(height: 24),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //   children: [
+        //     _buildSectionHeader('WORK PROOF'),
+        //     TextButton.icon(
+        //       onPressed: () {},
+        //       icon: const Icon(Icons.add_a_photo, size: 16),
+        //       label: const Text('Add Photo', style: TextStyle(fontWeight: FontWeight.w900)),
+        //     ),
+        //   ],
+        // ),
+        // const SizedBox(height: 12),
+        // Wrap(
+        //   spacing: 12,
+        //   children: [
+        //     ...widget.ticket.attachedPhotos.map((url) => _buildPhotoPlaceholder()),
+        //     _buildAddPhotoPlaceholder(),
+        //   ],
+        // ),
+        // const SizedBox(height: 40),
         Row(
           children: [
             Expanded(
@@ -557,29 +539,6 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: (widget.ticket.supportMode == null || widget.ticket.supportMode!.isEmpty)
-                    ? null
-                    : () => widget.onStatusUpdate(
-                          'Closed',
-                          notes: _notesController.text,
-                          photos: [], // Add photos if implemented
-                        ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.navy900,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.line,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Resolve Ticket',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-                ),
-              ),
-            ),
           ],
         ),
       ],

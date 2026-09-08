@@ -34,7 +34,7 @@ Future<void> init() async {
     baseUrl: sl(instanceName: 'baseUrl'),
     tokenManager: sl(),
   ));
-  sl.registerLazySingleton<String>(() => "http://192.168.1.55:8000", instanceName: 'baseUrl');
+  sl.registerLazySingleton<String>(() => "http://192.168.1.45:8000", instanceName: 'baseUrl');
 
   // Features - Auth
   sl.registerFactory(() => AuthCubit(repository: sl()));

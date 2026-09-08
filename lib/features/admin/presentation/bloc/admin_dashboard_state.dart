@@ -9,6 +9,12 @@ enum AdminDashboardTab { overview, serviceRequests, dealerManagement, reports }
 class AdminDashboardState {
   final bool isLoading;
   final bool isDetailLoading;
+  final bool isVerifyingCompletion;
+  final bool? verifyCompletionSuccess;
+  final bool isSendingOtp;
+  final bool? otpSentSuccess;
+  final bool isClosingTicket;
+  final bool? closeTicketSuccess;
   final AdminDashboardData? dashboardData;
   final List<AdminTicketItem>? tickets;
   final List<AdminDealerListItem>? dealerList;
@@ -23,6 +29,12 @@ class AdminDashboardState {
   AdminDashboardState({
     this.isLoading = false,
     this.isDetailLoading = false,
+    this.isVerifyingCompletion = false,
+    this.verifyCompletionSuccess,
+    this.isSendingOtp = false,
+    this.otpSentSuccess,
+    this.isClosingTicket = false,
+    this.closeTicketSuccess,
     this.dashboardData,
     this.tickets,
     this.dealerList,
@@ -38,6 +50,12 @@ class AdminDashboardState {
   AdminDashboardState copyWith({
     bool? isLoading,
     bool? isDetailLoading,
+    bool? isVerifyingCompletion,
+    bool? verifyCompletionSuccess,
+    bool? isSendingOtp,
+    bool? otpSentSuccess,
+    bool? isClosingTicket,
+    bool? closeTicketSuccess,
     AdminDashboardData? dashboardData,
     List<AdminTicketItem>? tickets,
     List<AdminDealerListItem>? dealerList,
@@ -52,6 +70,12 @@ class AdminDashboardState {
     return AdminDashboardState(
       isLoading: isLoading ?? this.isLoading,
       isDetailLoading: isDetailLoading ?? this.isDetailLoading,
+      isVerifyingCompletion: isVerifyingCompletion ?? this.isVerifyingCompletion,
+      verifyCompletionSuccess: verifyCompletionSuccess ?? this.verifyCompletionSuccess,
+      isSendingOtp: isSendingOtp ?? this.isSendingOtp,
+      otpSentSuccess: otpSentSuccess ?? this.otpSentSuccess,
+      isClosingTicket: isClosingTicket ?? this.isClosingTicket,
+      closeTicketSuccess: closeTicketSuccess ?? this.closeTicketSuccess,
       dashboardData: dashboardData ?? this.dashboardData,
       tickets: tickets ?? this.tickets,
       dealerList: dealerList ?? this.dealerList,

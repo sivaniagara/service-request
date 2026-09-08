@@ -19,9 +19,11 @@ class AppRouter {
     redirect: (context, state) {
       final tokenManager = sl<TokenManager>();
       final bool loggedIn = tokenManager.hasToken();
+      print("state.matchedLocation => ${state.matchedLocation}");
       final bool isAuthPath = state.matchedLocation == RouteNames.login || 
                              state.matchedLocation == RouteNames.otp ||
                              state.matchedLocation == RouteNames.profileSetup;
+      print("isAuthPath => $isAuthPath");
 
       if (!loggedIn) {
         return isAuthPath ? null : RouteNames.login;

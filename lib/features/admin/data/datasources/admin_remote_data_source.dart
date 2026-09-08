@@ -14,6 +14,9 @@ abstract class AdminRemoteDataSource {
   Future<AdminSlaComplianceModel> getSlaCompliance();
   Future<void> addDealer(Map<String, dynamic> data);
   Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions);
+  Future<void> verifyCompletion(String ticketId, String notes);
+  Future<void> sendCloseOtp(String ticketId);
+  Future<void> verifyCloseOtp(String ticketId, String otp);
 }
 
 class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
@@ -70,6 +73,27 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         "dealerIds": dealerIds,
         "instructions": instructions,
       },
+    );
+  }
+
+  @override
+  Future<void> verifyCompletion(String ticketId, String notes) async {
+    await httpService.patch(
+      "/api/admin/tickets/$ticketId/verify-completion",
+      body: {"notes": notes},
+    );
+  }
+
+  @override
+  Future<void> sendCloseOtp(String ticketId) async {
+    await httpService.post("/api/admin/tickets/$ticketId/close/send-otp");
+  }
+
+  @override
+  Future<void> verifyCloseOtp(String ticketId, String otp) async {
+    await httpService.post(
+      "/api/admin/tickets/$ticketId/close/verify-otp",
+      body: {"otp": otp},
     );
   }
 }

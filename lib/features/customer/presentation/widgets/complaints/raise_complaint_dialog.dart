@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -175,7 +176,17 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                       children: [
                         Expanded(child: _buildTextField('Your Name (Optional)', _nameController)),
                         const SizedBox(width: 20),
-                        Expanded(child: _buildTextField('Phone Number (Optional)', _phoneController)),
+                        Expanded(
+                          child: _buildTextField(
+                            'Phone Number (Optional)',
+                            _phoneController,
+                            keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -272,7 +283,13 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      {int maxLines = 1, String? hintText, IconData? prefixIcon, VoidCallback? onTap, String? Function(String?)? validator}) {
+      {int maxLines = 1,
+      String? hintText,
+      IconData? prefixIcon,
+      VoidCallback? onTap,
+      TextInputType? keyboardType,
+      List<TextInputFormatter>? inputFormatters,
+      String? Function(String?)? validator}) {
     final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,6 +305,8 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
           readOnly: onTap != null,
           onTap: onTap,
           validator: validator,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           style: textTheme.bodyMedium?.copyWith(color: AppColors.ink900, fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: hintText,

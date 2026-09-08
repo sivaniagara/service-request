@@ -1,0 +1,66 @@
+GREEN SPROUT - SERVICE REQUEST & MANAGEMENT SYSTEM
+===================================================
+
+1. PROJECT OVERVIEW
+-------------------
+Green Sprout is a multi-role enterprise service management platform designed to streamline customer support, technician dispatching, and service audit workflows. It follows a modular "Clean Architecture" for scalability and maintainability.
+
+2. USER ROLES & PERSONAS
+------------------------
+* ADMIN: Global oversight, dealer management, and high-level reporting.
+* DEALER: Regional management, technician assignment, and branch delegation.
+* CUSTOMER: Complaint registration, real-time tracking, and service history.
+* TECHNICIAN (SERVICE PERSON): Task execution (Remote/Visit), proof-of-work submission, and status updates.
+
+3. CORE FEATURES BY MODULE
+--------------------------
+
+A. AUTHENTICATION & ONBOARDING
+- Secure Login via OTP (One-Time Password).
+- Role-based Profile Setup and Routing.
+- Persistent Session Management (Token-based).
+
+B. CUSTOMER PORTAL
+- Dashboard Overview: Real-time summary of active and completed tickets.
+- Complaint Management:
+  * Easy-to-use "Raise Complaint" interface with issue categorization.
+  * Real-time ticket tracking with detailed status updates.
+- Service Reports: View and download service history and status reports.
+
+C. DEALER MANAGEMENT (DEALER PORTAL)
+- Operations Dashboard: Statistics on team performance and ticket resolution.
+- Resource Management:
+  * Add and manage Sub-Dealers and Technicians.
+  * Delegate branches and service areas.
+- Technician Assignment: Smart routing of customer tickets to field staff.
+- Service Monitoring: Track technician progress through a milestone-based stepper.
+
+D. TECHNICIAN PORTAL (SERVICE PERSON)
+- Task Management: Dedicated view for assigned service requests.
+- Service Execution:
+  * Support Modes: Toggle between "Site Visit" and "Remote Support".
+  * Milestone Stepper: Step-by-step progress tracking for transparency.
+- Communication: Quick-action buttons to call or chat with customers.
+- Completion Workflow: Diagnosis notes and proof-of-work (photo) uploads.
+
+E. ADMIN CONTROL CENTER
+- Global Analytics: Financial and operational KPIs using interactive charts.
+- Dealer Hierarchy: Management of the entire dealer network.
+- Audit Timeline: Detailed logs of every action taken on a ticket for accountability.
+- Ticket Sidebar: Quick-access navigation through the global ticket backlog.
+
+4. TECHNICAL SPECIFICATIONS
+---------------------------
+- Framework: Flutter (Cross-platform Android/iOS).
+- State Management: Flutter BLoC / Cubit for reactive UI.
+- Navigation: GoRouter for deep-linking and hierarchical routing.
+- Dependency Injection: GetIt for service locator pattern.
+- Data Visualization: FL Chart for analytics and reports.
+- UI/UX: Custom Material 3 theme, Rive/Lottie animations, and SVG support.
+
+5. COMPETITIVE ADVANTAGES
+-------------------------
+- Multi-tier Hierarchy: Supports complex business structures (Admin -> Dealer -> Sub-Dealer).
+- Hybrid Support: Built-in support for both physical visits and remote troubleshooting.
+- Audit Ready: Detailed timeline logging ensures transparency for insurance or quality audits.
+- Scalable Architecture: Feature-first structure allows adding new roles or services easily.

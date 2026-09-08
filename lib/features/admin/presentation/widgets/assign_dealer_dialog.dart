@@ -21,6 +21,15 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
   final _instructionsController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-select already assigned dealers
+    for (var dealer in widget.ticket.assignedDealer) {
+      _selectedDealerIds.add(dealer.dealerId);
+    }
+  }
+
+  @override
   void dispose() {
     _instructionsController.dispose();
     super.dispose();
