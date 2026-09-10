@@ -17,6 +17,7 @@ import '../widgets/admin_ticket_list_sidebar.dart';
 import '../widgets/tickets/admin_ticket_detail_view.dart';
 import '../widgets/admin_dealer_management_view.dart';
 import '../widgets/admin_reports_view.dart';
+import '../widgets/admin_mobile_dashboard.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
@@ -25,10 +26,15 @@ class AdminDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => sl<AdminDashboardCubit>()..loadDashboard(),
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        body: BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
-          builder: (context, state) {
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 900) {
+            return const AdminMobileDashboard();
+          }
+          return Scaffold(
+            backgroundColor: AppColors.bg,
+            body: BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
+              builder: (context, state) {
             return Row(
               children: [
                 AppSideNavigation(
@@ -64,9 +70,10 @@ class AdminDashboardPage extends StatelessWidget {
                     NavItem(
                       icon: Icons.build_outlined,
                       label: 'Service Requests',
-                      badge: state.tickets != null 
-                        ? state.tickets!.where((t) => t.status == 'Pending Assignment' || t.status == 'Unassigned').length.toString()
-                        : null,
+                      badge: state.tickets
+                          ?.where((t) => t.status == 'Pending Assignment' || t.status == 'Unassigned')
+                          .length
+                          .toString(),
                       isActive: state.activeTab == AdminDashboardTab.serviceRequests,
                       onTap: () => context.read<AdminDashboardCubit>().changeTab(AdminDashboardTab.serviceRequests),
                     ),
@@ -124,12 +131,14 @@ class AdminDashboardPage extends StatelessWidget {
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ),
-    );
-  }
+              );
+            },
+          ),
+        );
+      },
+    ),
+  );
+}
 
   Widget _buildDealerManagement(AdminDashboardState state) {
     if (state.dealers == null) return const SizedBox.shrink();
@@ -138,7 +147,13 @@ class AdminDashboardPage extends StatelessWidget {
 
   Widget _buildReports(AdminDashboardState state) {
     if (state.reportSummary == null || state.slaCompliance == null) return const SizedBox.shrink();
-    return Expanded(child: AdminReportsView(summary: state.reportSummary!, sla: state.slaCompliance!));
+    return Expanded(
+      child: AdminReportsView(
+        summary: state.reportSummary!,
+        sla: state.slaCompliance!,
+        regions: state.dashboardData?.regionalDistribution,
+      ),
+    );
   }
 
   Widget _buildOverview(AdminDashboardState state) {
@@ -481,7 +496,7 @@ class _TabItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isActive ? Colors.white.withOpacity(0.2) : Colors.grey.shade100,
+                  color: isActive ? Colors.white.withValues(alpha: 0.2) : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

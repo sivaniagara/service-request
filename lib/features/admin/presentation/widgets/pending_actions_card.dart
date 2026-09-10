@@ -27,31 +27,33 @@ class PendingActionsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Pending Actions Alert',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.navy900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Pending Actions Alert',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.navy900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Requires Admin handler assignment or escalation',
-                    style: TextStyle(fontSize: 12, color: AppColors.ink400),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Needs assignment or escalation',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.ink400),
+                    ),
+                  ],
+                ),
               ),
               TextButton(
                 onPressed: () {},
+                style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
                 child: const Text(
-                  'Manage Tickets ›',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.purple),
+                  'Manage ›',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.purple),
                 ),
               ),
             ],

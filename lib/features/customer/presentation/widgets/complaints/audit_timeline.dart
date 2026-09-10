@@ -31,30 +31,44 @@ class AuditTimeline extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.blue100.withOpacity(0.5),
-                          shape: BoxShape.circle,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.blue100.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.history, size: 16, color: AppColors.blue500),
                         ),
-                        child: const Icon(Icons.history, size: 16, color: AppColors.blue500),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Audit Timeline Log',
+                            style: textTheme.titleMedium?.copyWith(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Complete chronological history of the ticket',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: AppColors.ink400,
+                        fontWeight: FontWeight.normal,
+                        fontSize: 10,
                       ),
-                      const SizedBox(width: 10),
-                      Text('Audit Timeline Log', style: textTheme.titleMedium?.copyWith(fontSize: 14)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Complete chronological history of the ticket',
-                    style: textTheme.labelLarge?.copyWith(color: AppColors.ink400, fontWeight: FontWeight.normal, fontSize: 10),
-                  ),
-                ],
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -142,21 +156,33 @@ class _TimelineItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        event.title,
-                        style: textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12.5,
-                          color: AppColors.navy900,
-                        )
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.title,
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 12.5,
+                                color: AppColors.navy900,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            _RoleBadge(label: event.badgeType),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      _RoleBadge(label: event.badgeType),
-                      const Spacer(),
+                      const SizedBox(width: 12),
                       Text(
                         event.timestamp,
-                        style: textTheme.labelLarge?.copyWith(color: AppColors.ink400, fontSize: 9.5),
+                        style: textTheme.labelLarge?.copyWith(
+                          color: AppColors.ink400,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -182,12 +208,15 @@ class _TimelineItem extends StatelessWidget {
                           fontSize: 10,
                         ),
                       ),
-                      Text(
-                        event.actor,
-                        style: textTheme.labelLarge?.copyWith(
-                          color: AppColors.ink900,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          event.actor,
+                          style: textTheme.labelLarge?.copyWith(
+                            color: AppColors.ink900,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

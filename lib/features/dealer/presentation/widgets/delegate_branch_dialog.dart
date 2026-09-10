@@ -5,7 +5,11 @@ import '../../data/models/dealer_ticket_model.dart';
 class DelegateBranchDialog extends StatefulWidget {
   final DealerTicketDetail ticket;
 
-  const DelegateBranchDialog({super.key, required this.ticket});
+  /// When true, renders as plain scrollable content for a full-screen
+  /// phone page instead of the fixed 540px [Dialog] used on desktop.
+  final bool isFullScreen;
+
+  const DelegateBranchDialog({super.key, required this.ticket, this.isFullScreen = false});
 
   @override
   State<DelegateBranchDialog> createState() => _DelegateBranchDialogState();
@@ -18,7 +22,7 @@ class _DelegateBranchDialogState extends State<DelegateBranchDialog> {
   void initState() {
     super.initState();
     _notesController.text =
-        'Delegated for on-site inspection and localized maintenance in Field Site — Coimbatore.';
+    'Delegated for on-site inspection and localized maintenance in Field Site — Coimbatore.';
   }
 
   @override
@@ -29,6 +33,60 @@ class _DelegateBranchDialogState extends State<DelegateBranchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final body = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!widget.isFullScreen) _buildHeader(),
+        Padding(
+          padding: EdgeInsets.all(widget.isFullScreen ? 0 : 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCustomerLocationInfo(),
+              const SizedBox(height: 20),
+              const Text(
+                'SELECT REGIONAL SUB-DEALER BRANCH',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.ink600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildBranchSelector(),
+              const SizedBox(height: 20),
+              const Text(
+                'DELEGATION INSTRUCTIONS / SERVICE NOTES',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.ink600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildNotesField(),
+              const SizedBox(height: 6),
+              const Text(
+                'Instruction displayed on Sub-Dealer dashboard and audit log.',
+                style: TextStyle(fontSize: 10, color: AppColors.ink400),
+              ),
+              const SizedBox(height: 20),
+              _buildSyncInfo(),
+              const SizedBox(height: 24),
+              _buildFooter(context),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (widget.isFullScreen) {
+      return body;
+    }
+
     return Dialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
@@ -39,55 +97,7 @@ class _DelegateBranchDialogState extends State<DelegateBranchDialog> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCustomerLocationInfo(),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'SELECT REGIONAL SUB-DEALER BRANCH',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.ink600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildBranchSelector(),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'DELEGATION INSTRUCTIONS / SERVICE NOTES',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.ink600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildNotesField(),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Instruction displayed on Sub-Dealer dashboard and audit log.',
-                    style: TextStyle(fontSize: 10, color: AppColors.ink400),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildSyncInfo(),
-                  const SizedBox(height: 24),
-                  _buildFooter(context),
-                ],
-              ),
-            ),
-          ],
-        ),
+        child: body,
       ),
     );
   }
@@ -350,31 +360,45 @@ class _DelegateBranchDialogState extends State<DelegateBranchDialog> {
   }
 
   Widget _buildFooter(BuildContext context) {
+    final cancelButton = TextButton(
+      onPressed: () => Navigator.pop(context),
+      child: const Text(
+        'Cancel',
+        style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+    );
+
+    final confirmButton = ElevatedButton(
+      onPressed: () => Navigator.pop(context),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.purple500,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 0,
+      ),
+      child: const Text(
+        'Confirm Delegation',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+    );
+
+    if (widget.isFullScreen) {
+      return Row(
+        children: [
+          Expanded(child: cancelButton),
+          const SizedBox(width: 12),
+          Expanded(child: confirmButton),
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-        ),
+        cancelButton,
         const SizedBox(width: 12),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.purple500,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Confirm Delegation',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-        ),
+        confirmButton,
       ],
     );
   }

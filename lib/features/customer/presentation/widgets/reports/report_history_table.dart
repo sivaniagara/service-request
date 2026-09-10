@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
 
+import '../../../data/models/dashboard_models.dart';
+
 class ReportHistoryTable extends StatelessWidget {
-  const ReportHistoryTable({super.key});
+  final List<RequestHistorySummaryItem> history;
+  const ReportHistoryTable({super.key, required this.history});
 
   @override
   Widget build(BuildContext context) {
@@ -27,29 +30,28 @@ class ReportHistoryTable extends StatelessWidget {
             TableRow(
               children: [
                 _HeaderCell(label: 'TICKET'),
-                _HeaderCell(label: 'SITE'),
+                _HeaderCell(label: 'CATEGORY'),
                 _HeaderCell(label: 'RAISED'),
                 _HeaderCell(label: 'STATUS'),
               ],
             ),
-            _buildRow('TCK-104', 'Field Site', 'Aug 20', 'In Progress'),
-            _buildRow('TCK-105', 'Warehouse', 'Aug 21', 'Pending Assignment'),
-            _buildRow('TCK-102', 'Field Site', 'Aug 19', 'Assigned to Handler'),
-            _buildRow('TCK-101', 'Field Site', 'Aug 15', 'Closed'),
-            _buildRow('TCK-099', 'Warehouse', 'Aug 16', 'Escalated to Company'),
+            ...history.map((item) => _buildRow(item)),
           ],
         ),
       ],
     );
   }
 
-  TableRow _buildRow(String ticket, String site, String raised, String status) {
+  TableRow _buildRow(RequestHistorySummaryItem item) {
     return TableRow(
       children: [
-        _DataCell(text: '#$ticket', isBold: true),
-        _DataCell(text: site),
-        _DataCell(text: raised),
-        _StatusCell(status: status),
+        _DataCell(text: '#${item.ticketNumber}', isBold: true),
+        _DataCell(
+          text: item.issueCategory.isNotEmpty ? item.issueCategory.first : 'General',
+          isBold: false,
+        ),
+        _DataCell(text: item.raised),
+        _StatusCell(status: item.status),
       ],
     );
   }

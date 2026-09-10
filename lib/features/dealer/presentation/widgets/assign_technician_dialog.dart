@@ -10,7 +10,11 @@ import '../bloc/dealer_dashboard_state.dart';
 class AssignTechnicianDialog extends StatefulWidget {
   final DealerTicketDetail ticket;
 
-  const AssignTechnicianDialog({super.key, required this.ticket});
+  /// When true, renders as plain scrollable content for a full-screen
+  /// phone page instead of the fixed 600px [Dialog] used on desktop.
+  final bool isFullScreen;
+
+  const AssignTechnicianDialog({super.key, required this.ticket, this.isFullScreen = false});
 
   @override
   State<AssignTechnicianDialog> createState() => _AssignTechnicianDialogState();
@@ -24,7 +28,7 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
   void initState() {
     super.initState();
     context.read<DealerDashboardCubit>().loadTechnicians();
-    
+
     // Auto-select technicians if any are already assigned
     if (widget.ticket.assignedTechnicians.isNotEmpty) {
       _selectedTechIds.addAll(
@@ -41,6 +45,41 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTargetTicketInfo(),
+        const SizedBox(height: 24),
+        const Text(
+          'Select Field Technician',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColors.navy900,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildTechnicianList(),
+        const SizedBox(height: 24),
+        _buildNotesField(),
+        const SizedBox(height: 24),
+        _buildNotificationBanner(),
+        const SizedBox(height: 32),
+      ],
+    );
+
+    if (widget.isFullScreen) {
+      // Page supplies the AppBar; footer stays at the end of the
+      // scroll here, matching the other full-screen forms in this app.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          content,
+          _buildFooter(context, isFullScreen: true),
+        ],
+      );
+    }
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -57,31 +96,10 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTargetTicketInfo(),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Select Field Technician',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.navy900,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTechnicianList(),
-                    const SizedBox(height: 24),
-                    _buildNotesField(),
-                    const SizedBox(height: 24),
-                    _buildNotificationBanner(),
-                    const SizedBox(height: 32),
-                  ],
-                ),
+                child: content,
               ),
             ),
-            _buildFooter(context),
+            _buildFooter(context, isFullScreen: false),
           ],
         ),
       ),
@@ -141,6 +159,52 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
   }
 
   Widget _buildTargetTicketInfo() {
+    final titleBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'TARGET TICKET',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: AppColors.blue500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '#${widget.ticket.ticketNumber} — ${widget.ticket.displayTitle}',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColors.navy900,
+          ),
+        ),
+      ],
+    );
+
+    final skillsBlock = Column(
+      crossAxisAlignment: widget.isFullScreen ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      children: [
+        const Text(
+          'REQUIRED SKILLS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: AppColors.blue500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          alignment: widget.isFullScreen ? WrapAlignment.start : WrapAlignment.end,
+          children: widget.ticket.requiredSkills.map((skill) => _buildSkillBadge(skill)).toList(),
+        ),
+      ],
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -149,55 +213,20 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.blue100),
       ),
-      child: Row(
+      child: widget.isFullScreen
+          ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleBlock,
+          const SizedBox(height: 14),
+          skillsBlock,
+        ],
+      )
+          : Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'TARGET TICKET',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.blue500,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '#${widget.ticket.ticketNumber} — ${widget.ticket.displayTitle}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.navy900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'REQUIRED SKILLS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.blue500,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: widget.ticket.requiredSkills.map((skill) => Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: _buildSkillBadge(skill),
-                )).toList(),
-              ),
-            ],
-          ),
+          Expanded(child: titleBlock),
+          skillsBlock,
         ],
       ),
     );
@@ -429,8 +458,8 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
                     text: _selectedTechIds.isEmpty
                         ? 'the technicians'
                         : _selectedTechIds.length == 1
-                            ? context.read<DealerDashboardCubit>().state.technicians?.firstWhere((t) => t.technicianId == _selectedTechIds.first).name ?? 'the technician'
-                            : '${_selectedTechIds.length} technicians',
+                        ? context.read<DealerDashboardCubit>().state.technicians?.firstWhere((t) => t.technicianId == _selectedTechIds.first).name ?? 'the technician'
+                        : '${_selectedTechIds.length} technicians',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const TextSpan(text: ' listed on their ticket page with direct contact details and live stepper progression.'),
@@ -443,93 +472,110 @@ class _AssignTechnicianDialogState extends State<AssignTechnicianDialog> {
     );
   }
 
-  Widget _buildFooter(BuildContext context) {
+  Widget _buildFooter(BuildContext context, {required bool isFullScreen}) {
+    final cancelButton = TextButton(
+      onPressed: () => Navigator.pop(context),
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.symmetric(horizontal: isFullScreen ? 0 : 24, vertical: 16),
+      ),
+      child: const Text(
+        'Cancel',
+        style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold),
+      ),
+    );
+
+    final dispatchButton = ElevatedButton(
+      onPressed: _selectedTechIds.isEmpty
+          ? null
+          : () async {
+        // Show Loading
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(child: CircularProgressIndicator()),
+        );
+
+        try {
+          await context.read<DealerDashboardCubit>().assignTechnicians(
+            widget.ticket.ticketId,
+            _selectedTechIds.toList(),
+            _notesController.text,
+          );
+
+          // Close loading
+          if (context.mounted) Navigator.pop(context);
+
+          // Show Success
+          if (context.mounted) {
+            AwesomeDialog(
+              context: context,
+              dialogType: DialogType.success,
+              animType: AnimType.bottomSlide,
+              title: 'Dispatch Successful',
+              desc: 'The technician has been assigned and notified.',
+              btnOkOnPress: () {
+                Navigator.pop(context); // Close AssignTechnicianDialog
+              },
+              width: 400,
+            ).show();
+          }
+        } catch (e) {
+          // Close loading
+          if (context.mounted) Navigator.pop(context);
+
+          // Show Error
+          if (context.mounted) {
+            AwesomeDialog(
+              context: context,
+              dialogType: DialogType.error,
+              animType: AnimType.bottomSlide,
+              title: 'Dispatch Failed',
+              desc: e.toString(),
+              btnOkOnPress: () {},
+              width: 400,
+            ).show();
+          }
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF4F46E5),
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: const Color(0xFFEDF0F6),
+        disabledForegroundColor: const Color(0xFF95A0B4),
+        padding: EdgeInsets.symmetric(horizontal: isFullScreen ? 0 : 32, vertical: isFullScreen ? 18 : 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+      ),
+      child: const Text(
+        'Dispatch Technician →',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+    );
+
+    if (isFullScreen) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          children: [
+            SizedBox(width: double.infinity, child: dispatchButton),
+            const SizedBox(height: 4),
+            cancelButton,
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.line)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold),
-            ),
-          ),
+          cancelButton,
           const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: _selectedTechIds.isEmpty
-                ? null 
-                : () async {
-                    // Show Loading
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const Center(child: CircularProgressIndicator()),
-                    );
-
-                    try {
-                      await context.read<DealerDashboardCubit>().assignTechnicians(
-                        widget.ticket.ticketId,
-                        _selectedTechIds.toList(),
-                        _notesController.text,
-                      );
-
-                      // Close loading
-                      if (context.mounted) Navigator.pop(context);
-
-                      // Show Success
-                      if (context.mounted) {
-                        AwesomeDialog(
-                          context: context,
-                          dialogType: DialogType.success,
-                          animType: AnimType.bottomSlide,
-                          title: 'Dispatch Successful',
-                          desc: 'The technician has been assigned and notified.',
-                          btnOkOnPress: () {
-                            Navigator.pop(context); // Close AssignTechnicianDialog
-                          },
-                          width: 400,
-                        ).show();
-                      }
-                    } catch (e) {
-                      // Close loading
-                      if (context.mounted) Navigator.pop(context);
-
-                      // Show Error
-                      if (context.mounted) {
-                        AwesomeDialog(
-                          context: context,
-                          dialogType: DialogType.error,
-                          animType: AnimType.bottomSlide,
-                          title: 'Dispatch Failed',
-                          desc: e.toString(),
-                          btnOkOnPress: () {},
-                          width: 400,
-                        ).show();
-                      }
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(0xFFEDF0F6),
-              disabledForegroundColor: const Color(0xFF95A0B4),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Dispatch Technician →',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
+          dispatchButton,
         ],
       ),
     );

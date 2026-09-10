@@ -6,15 +6,52 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import '../../../../../core/theme/app_theme.dart';
 
-class LocationPickerDialog extends StatefulWidget {
+class LocationPickerDialog extends StatelessWidget {
   final String initialLocation;
-  const LocationPickerDialog({super.key, required this.initialLocation});
+  final bool isFullScreen;
+  
+  const LocationPickerDialog({
+    super.key, 
+    required this.initialLocation,
+    this.isFullScreen = false,
+  });
 
   @override
-  State<LocationPickerDialog> createState() => _LocationPickerDialogState();
+  Widget build(BuildContext context) {
+    if (isFullScreen) {
+      return LocationPickerContent(
+        initialLocation: initialLocation,
+        isFullScreen: true,
+      );
+    }
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: 1000,
+        height: 800,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+        child: LocationPickerContent(initialLocation: initialLocation),
+      ),
+    );
+  }
 }
 
-class _LocationPickerDialogState extends State<LocationPickerDialog> {
+class LocationPickerContent extends StatefulWidget {
+  final String initialLocation;
+  final bool isFullScreen;
+  
+  const LocationPickerContent({
+    super.key, 
+    required this.initialLocation,
+    this.isFullScreen = false,
+  });
+
+  @override
+  State<LocationPickerContent> createState() => _LocationPickerContentState();
+}
+
+class _LocationPickerContentState extends State<LocationPickerContent> {
   LatLng _selectedLocation = const LatLng(11.0168, 76.9558); // Default to Coimbatore
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
@@ -140,69 +177,60 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 1000,
-        height: 800,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: Stack(
+    return Column(
+      children: [
+        _buildHeader(context),
+        Expanded(
+          child: Stack(
+            children: [
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: _selectedLocation,
+                  initialZoom: 13,
+                  onTap: _onTap,
+                ),
                 children: [
-                  FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: _selectedLocation,
-                      initialZoom: 13,
-                      onTap: _onTap,
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=$_apiKey',
-                        userAgentPackageName: 'com.example.service_request',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: _selectedLocation,
-                            width: 40,
-                            height: 40,
-                            child: const Icon(
-                              Icons.location_on,
-                              color: AppColors.red500,
-                              size: 40,
-                            ),
-                          ),
-                        ],
+                  TileLayer(
+                    urlTemplate: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=$_apiKey',
+                    userAgentPackageName: 'com.example.service_request',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: _selectedLocation,
+                        width: 40,
+                        height: 40,
+                        child: const Icon(
+                          Icons.location_on,
+                          color: AppColors.red500,
+                          size: 40,
+                        ),
                       ),
                     ],
                   ),
-                  _buildSearchOverlay(),
-                  if (_isLoading)
-                    Container(
-                      color: Colors.black26,
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                  Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: FloatingActionButton(
-                      onPressed: _getCurrentLocation,
-                      backgroundColor: Colors.white,
-                      child: const Icon(Icons.my_location, color: AppColors.blue500),
-                    ),
-                  ),
                 ],
               ),
-            ),
-            _buildFooter(context),
-          ],
+              _buildSearchOverlay(),
+              if (_isLoading)
+                Container(
+                  color: Colors.black26,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              Positioned(
+                bottom: widget.isFullScreen ? 100 : 20,
+                right: 20,
+                child: FloatingActionButton(
+                  onPressed: _getCurrentLocation,
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.my_location, color: AppColors.blue500),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+        _buildFooter(context),
+      ],
     );
   }
 
@@ -213,19 +241,25 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Mark Site Location',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Search for an area or click on the map to mark the exact site location',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink400),
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mark Site Location',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: widget.isFullScreen ? 20 : null,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Search for an area or click on the map to mark the location',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.ink400),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
           IconButton(
             onPressed: () => Navigator.pop(context),
@@ -260,7 +294,7 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
               controller: _searchController,
               onChanged: (val) => _fetchSuggestions(val),
               decoration: InputDecoration(
-                hintText: 'Search for area, landmark, or city...',
+                hintText: 'Search for area, landmark...',
                 prefixIcon: const Icon(Icons.search, color: AppColors.blue500),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -281,7 +315,7 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
           if (_suggestions.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(top: 8),
-              constraints: const BoxConstraints(maxHeight: 300),
+              constraints: BoxConstraints(maxHeight: widget.isFullScreen ? 200 : 300),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -318,61 +352,130 @@ class _LocationPickerDialogState extends State<LocationPickerDialog> {
 
   Widget _buildFooter(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(widget.isFullScreen ? 16 : 24),
       color: Colors.white,
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.bg,
-              borderRadius: BorderRadius.circular(8),
+          if (widget.isFullScreen) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.bg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.my_location, color: AppColors.blue500, size: 18),
+                  const SizedBox(width: 12),
+                  Text(
+                    'LAT: ${_selectedLocation.latitude.toStringAsFixed(4)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('|', style: TextStyle(color: AppColors.line)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'LNG: ${_selectedLocation.longitude.toStringAsFixed(4)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.my_location, color: AppColors.blue500, size: 18),
-                const SizedBox(width: 12),
-                Text(
-                  'LAT: ${_selectedLocation.latitude.toStringAsFixed(6)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            const SizedBox(height: 16),
+          ],
+          Row(
+            children: [
+              if (!widget.isFullScreen)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.bg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.my_location, color: AppColors.blue500, size: 18),
+                      const SizedBox(width: 12),
+                      Text(
+                        'LAT: ${_selectedLocation.latitude.toStringAsFixed(6)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('|', style: TextStyle(color: AppColors.line)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'LNG: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                const Text('|', style: TextStyle(color: AppColors.line)),
-                const SizedBox(width: 8),
-                Text(
-                  'LNG: ${_selectedLocation.longitude.toStringAsFixed(6)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              if (!widget.isFullScreen) const Spacer(),
+              if (widget.isFullScreen)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      side: const BorderSide(color: AppColors.line),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              else
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                    side: const BorderSide(color: AppColors.line),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Cancel', style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold)),
                 ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-              side: const BorderSide(color: AppColors.line),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.ink600, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(
-                context,
-                _searchController.text.isNotEmpty 
-                  ? _searchController.text 
-                  : 'Site: ${_selectedLocation.latitude.toStringAsFixed(4)}, ${_selectedLocation.longitude.toStringAsFixed(4)}'
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.navy900,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Confirm & Update Location', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 16),
+              if (widget.isFullScreen)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(
+                        context,
+                        _searchController.text.isNotEmpty 
+                          ? _searchController.text 
+                          : 'Site: ${_selectedLocation.latitude.toStringAsFixed(4)}, ${_selectedLocation.longitude.toStringAsFixed(4)}'
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.navy900,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                )
+              else
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(
+                      context,
+                      _searchController.text.isNotEmpty 
+                        ? _searchController.text 
+                        : 'Site: ${_selectedLocation.latitude.toStringAsFixed(4)}, ${_selectedLocation.longitude.toStringAsFixed(4)}'
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.navy900,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Confirm & Update Location', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+            ],
           ),
         ],
       ),

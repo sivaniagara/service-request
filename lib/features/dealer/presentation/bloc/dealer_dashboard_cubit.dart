@@ -205,11 +205,11 @@ class DealerDashboardCubit extends Cubit<DealerDashboardState> {
     }
   }
 
-  void selectTicket(String ticketId) {
+  Future<void> selectTicket(String ticketId) async {
     if (state.tickets != null) {
       final selected = state.tickets!.firstWhere((t) => t.ticketId == ticketId);
       emit(state.copyWith(selectedTicket: selected));
-      loadTicketDetail(ticketId);
+      await loadTicketDetail(ticketId);
     }
   }
 

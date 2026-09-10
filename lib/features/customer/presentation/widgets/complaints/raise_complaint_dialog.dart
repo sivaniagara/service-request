@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'dart:io' show File;
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../injection_container.dart';
 import '../../../data/models/complaint_models.dart';
 import '../../bloc/complaint_cubit.dart';
@@ -17,12 +18,14 @@ class RaiseComplaintDialog extends StatefulWidget {
   final String? initialName;
   final String? initialPhone;
   final VoidCallback? onSuccess;
+  final bool isFullScreen;
   const RaiseComplaintDialog({
     super.key,
     required this.categories,
     this.initialName,
     this.initialPhone,
     this.onSuccess,
+    this.isFullScreen = false,
   });
 
   @override
@@ -104,56 +107,94 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+    final content = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!widget.isFullScreen) _buildHeader(context),
+          if (!widget.isFullScreen) const SizedBox(height: 32),
+          if (widget.isFullScreen)
+            _buildTextField('Your Name (Optional)', _nameController)
+          else
+            Row(
+              children: [
+                Expanded(child: _buildTextField('Your Name (Optional)', _nameController)),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: _buildTextField(
+                    'Phone Number (Optional)',
+                    _phoneController,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          if (widget.isFullScreen) ...[
+            const SizedBox(height: 20),
+            _buildTextField(
+              'Phone Number (Optional)',
+              _phoneController,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+            ),
+          ],
+          const SizedBox(height: 20),
+          _buildTextField(
+            'Site Location*',
+            _locationController,
+            prefixIcon: Icons.location_on_outlined,
+            validator: (value) => value == null || value.isEmpty ? 'Location is required' : null,
+            onTap: () async {
+              final result = await ResponsiveUtils.showLocationPicker(context, _locationController.text);
+              if (result != null) {
+                setState(() => _locationController.text = result);
+              }
+            },
+          ),
+          const SizedBox(height: 28),
+          _buildCategorySelection(textTheme),
+          const SizedBox(height: 28),
+          _buildPriorityLevel(textTheme),
+          const SizedBox(height: 28),
+          _buildPreferredSlot(textTheme),
+          const SizedBox(height: 28),
+          _buildTextField(
+            'What went wrong? (Detailed description) (Optional)',
+            _descriptionController,
+            maxLines: 4,
+            hintText: 'Describe the issue...',
+          ),
+          const SizedBox(height: 28),
+          _buildAttachmentArea(textTheme),
+          const SizedBox(height: 32),
+          Builder(builder: (context) => _buildFooter(context)),
+        ],
+      ),
+    );
+
+    if (widget.isFullScreen) {
+      return BlocProvider(
+        create: (context) => sl<ComplaintCubit>(),
+        child: BlocListener<ComplaintCubit, ComplaintState>(
+          listener: _onStateChange,
+          child: content,
+        ),
+      );
+    }
+
     return BlocProvider(
       create: (context) => sl<ComplaintCubit>(),
       child: BlocListener<ComplaintCubit, ComplaintState>(
-        listener: (context, state) {
-          if (state is ComplaintLoading) {
-            AwesomeDialog(
-              width: 400,
-              context: context,
-              dialogType: DialogType.noHeader,
-              animType: AnimType.scale,
-              body: const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 20),
-                    Text('Submitting Ticket...', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              dismissOnTouchOutside: false,
-              dismissOnBackKeyPress: false,
-            ).show();
-          } else if (state is ComplaintSuccess) {
-            Navigator.pop(context); // Close loading dialog
-            AwesomeDialog(
-              width: 400,
-              context: context,
-              dialogType: DialogType.success,
-              animType: AnimType.bottomSlide,
-              title: 'Success',
-              desc: 'Ticket #${state.response.ticketNumber} raised successfully!',
-              btnOkOnPress: () {
-                widget.onSuccess?.call();
-                Navigator.pop(context); // Close main dialog
-              },
-            ).show();
-          } else if (state is ComplaintFailure) {
-            Navigator.pop(context); // Close loading dialog
-            AwesomeDialog(
-              width: 400,
-              context: context,
-              dialogType: DialogType.error,
-              animType: AnimType.bottomSlide,
-              title: 'Submission Failed',
-              desc: state.message,
-              btnOkOnPress: () {},
-            ).show();
-          }
-        },
+        listener: _onStateChange,
         child: Dialog(
           backgroundColor: Colors.white,
           elevation: 24,
@@ -164,78 +205,60 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
             padding: const EdgeInsets.all(32),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildHeader(context),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Your Name (Optional)', _nameController)),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: _buildTextField(
-                            'Phone Number (Optional)',
-                            _phoneController,
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            'Site Location*',
-                            _locationController,
-                            prefixIcon: Icons.location_on_outlined,
-                            validator: (value) => value == null || value.isEmpty ? 'Location is required' : null,
-                            onTap: () async {
-                              final result = await showDialog<String>(
-                                context: context,
-                                builder: (context) => LocationPickerDialog(initialLocation: _locationController.text),
-                              );
-                              if (result != null) {
-                                setState(() => _locationController.text = result);
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
-                    _buildCategorySelection(textTheme),
-                    const SizedBox(height: 28),
-                    _buildPriorityLevel(textTheme),
-                    const SizedBox(height: 28),
-                    _buildPreferredSlot(textTheme),
-                    const SizedBox(height: 28),
-                    _buildTextField(
-                      'What went wrong? (Detailed description) (Optional)',
-                      _descriptionController,
-                      maxLines: 4,
-                      hintText: 'Describe the issue...',
-                    ),
-                    const SizedBox(height: 28),
-                    _buildAttachmentArea(textTheme),
-                    const SizedBox(height: 32),
-                    Builder(builder: (context) => _buildFooter(context)),
-                  ],
-                ),
-              ),
+              child: content,
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _onStateChange(BuildContext context, ComplaintState state) {
+    if (state is ComplaintLoading) {
+      AwesomeDialog(
+        width: MediaQuery.of(context).size.width > 600 ? 400 : null,
+        context: context,
+        dialogType: DialogType.noHeader,
+        animType: AnimType.scale,
+        body: const Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+              Text('Submitting Ticket...', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        dismissOnTouchOutside: false,
+        dismissOnBackKeyPress: false,
+      ).show();
+    } else if (state is ComplaintSuccess) {
+      Navigator.pop(context); // Close loading dialog
+      AwesomeDialog(
+        width: MediaQuery.of(context).size.width > 600 ? 400 : null,
+        context: context,
+        dialogType: DialogType.success,
+        animType: AnimType.bottomSlide,
+        title: 'Success',
+        desc: 'Ticket #${state.response.ticketNumber} raised successfully!',
+        btnOkOnPress: () {
+          widget.onSuccess?.call();
+          Navigator.pop(context); // Close main dialog/page
+        },
+      ).show();
+    } else if (state is ComplaintFailure) {
+      Navigator.pop(context); // Close loading dialog
+      AwesomeDialog(
+        width: MediaQuery.of(context).size.width > 600 ? 400 : null,
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.bottomSlide,
+        title: 'Submission Failed',
+        desc: state.message,
+        btnOkOnPress: () {},
+      ).show();
+    }
   }
 
   Widget _buildHeader(BuildContext context) {

@@ -459,31 +459,152 @@ class TimelineEvent extends Equatable {
 class CustomerReport extends Equatable {
   final String timeframe;
   final ReportSummary summary;
+  final RequestsOverTime requestsOverTime;
+  final List<RequestHistorySummaryItem> requestHistorySummary;
   final List<CategoryBreakdown> categoryBreakdown;
   final List<ServiceHistoryItem> serviceHistory;
+  final String? downloadPdfUrl;
 
   const CustomerReport({
     required this.timeframe,
     required this.summary,
+    required this.requestsOverTime,
+    required this.requestHistorySummary,
     required this.categoryBreakdown,
     required this.serviceHistory,
+    this.downloadPdfUrl,
   });
 
   factory CustomerReport.fromJson(Map<String, dynamic> json) {
     return CustomerReport(
-      timeframe: json['timeframe'],
-      summary: ReportSummary.fromJson(json['summaryCards']),
-      categoryBreakdown: (json['categoryBreakdown'] as List)
-          .map((e) => CategoryBreakdown.fromJson(e))
-          .toList(),
-      serviceHistory: (json['serviceHistory'] as List)
-          .map((e) => ServiceHistoryItem.fromJson(e))
-          .toList(),
+      timeframe: json['timeframe'] ?? '',
+      summary: ReportSummary.fromJson(json['summaryCards'] ?? {}),
+      requestsOverTime: RequestsOverTime.fromJson(json['requestsOverTime'] ?? {}),
+      requestHistorySummary: (json['requestHistorySummary'] as List?)
+              ?.map((e) => RequestHistorySummaryItem.fromJson(e))
+              .toList() ??
+          [],
+      categoryBreakdown: (json['categoryBreakdown'] as List?)
+              ?.map((e) => CategoryBreakdown.fromJson(e))
+              .toList() ??
+          [],
+      serviceHistory: (json['serviceHistory'] as List?)
+              ?.map((e) => ServiceHistoryItem.fromJson(e))
+              .toList() ??
+          [],
+      downloadPdfUrl: json['downloadPdfUrl'],
     );
   }
 
   @override
-  List<Object?> get props => [timeframe, summary, categoryBreakdown, serviceHistory];
+  List<Object?> get props => [
+        timeframe,
+        summary,
+        requestsOverTime,
+        requestHistorySummary,
+        categoryBreakdown,
+        serviceHistory,
+        downloadPdfUrl,
+      ];
+}
+
+class RequestsOverTime extends Equatable {
+  final List<ChartSpot> spots;
+  final double maxY;
+  final double interval;
+
+  const RequestsOverTime({
+    required this.spots,
+    required this.maxY,
+    required this.interval,
+  });
+
+  factory RequestsOverTime.fromJson(Map<String, dynamic> json) {
+    return RequestsOverTime(
+      spots: (json['spots'] as List?)
+              ?.map((e) => ChartSpot.fromJson(e))
+              .toList() ??
+          [],
+      maxY: (json['maxY'] as num?)?.toDouble() ?? 0.0,
+      interval: (json['interval'] as num?)?.toDouble() ?? 1.0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [spots, maxY, interval];
+}
+
+class ChartSpot extends Equatable {
+  final String label;
+  final int year;
+  final int count;
+  final int spotIndex;
+
+  const ChartSpot({
+    required this.label,
+    required this.year,
+    required this.count,
+    required this.spotIndex,
+  });
+
+  factory ChartSpot.fromJson(Map<String, dynamic> json) {
+    return ChartSpot(
+      label: json['label'] ?? '',
+      year: json['year'] ?? 0,
+      count: json['count'] ?? 0,
+      spotIndex: json['spotIndex'] ?? 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [label, year, count, spotIndex];
+}
+
+class RequestHistorySummaryItem extends Equatable {
+  final String ticketId;
+  final String ticketNumber;
+  final String site;
+  final String raised;
+  final String raisedIso;
+  final String status;
+  final List<String> issueCategory;
+  final String priority;
+
+  const RequestHistorySummaryItem({
+    required this.ticketId,
+    required this.ticketNumber,
+    required this.site,
+    required this.raised,
+    required this.raisedIso,
+    required this.status,
+    required this.issueCategory,
+    required this.priority,
+  });
+
+  factory RequestHistorySummaryItem.fromJson(Map<String, dynamic> json) {
+    return RequestHistorySummaryItem(
+      ticketId: json['ticketId'] ?? '',
+      ticketNumber: json['ticketNumber'] ?? '',
+      site: json['site'] ?? '',
+      raised: json['raised'] ?? '',
+      raisedIso: json['raisedIso'] ?? '',
+      status: json['status'] ?? '',
+      issueCategory: List<String>.from(json['issueCategory'] ?? []),
+      priority: json['priority'] ?? '',
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        ticketId,
+        ticketNumber,
+        site,
+        raised,
+        raisedIso,
+        status,
+        issueCategory,
+        priority,
+      ];
 }
 
 class ReportSummary extends Equatable {

@@ -10,8 +10,8 @@ abstract class AdminRemoteDataSource {
   Future<AdminTicketModel> getAdminTickets();
   Future<AdminTicketDetailModel> getAdminTicketDetail(String ticketId);
   Future<AdminDealerModel> getAdminDealers();
-  Future<AdminReportSummaryModel> getReportSummary();
-  Future<AdminSlaComplianceModel> getSlaCompliance();
+  Future<AdminReportSummaryModel> getReportSummary({String timeframe = '30D', String? region});
+  Future<AdminSlaComplianceModel> getSlaCompliance({String timeframe = '30D'});
   Future<void> addDealer(Map<String, dynamic> data);
   Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions);
   Future<void> verifyCompletion(String ticketId, String notes);
@@ -49,14 +49,16 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   }
 
   @override
-  Future<AdminReportSummaryModel> getReportSummary() async {
-    final response = await httpService.get("/api/admin/reports/summary");
+  Future<AdminReportSummaryModel> getReportSummary({String timeframe = '30D', String? region}) async {
+    String url = "/api/admin/reports/summary?timeframe=$timeframe";
+    if (region != null) url += "&region=$region";
+    final response = await httpService.get(url);
     return AdminReportSummaryModel.fromJson(response);
   }
 
   @override
-  Future<AdminSlaComplianceModel> getSlaCompliance() async {
-    final response = await httpService.get("/api/admin/reports/sla-compliance");
+  Future<AdminSlaComplianceModel> getSlaCompliance({String timeframe = '30D'}) async {
+    final response = await httpService.get("/api/admin/reports/sla-compliance?timeframe=$timeframe");
     return AdminSlaComplianceModel.fromJson(response);
   }
 

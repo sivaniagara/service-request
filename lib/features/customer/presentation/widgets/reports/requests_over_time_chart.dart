@@ -1,9 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../data/models/dashboard_models.dart';
 
 class RequestsOverTimeChart extends StatelessWidget {
-  const RequestsOverTimeChart({super.key});
+  final RequestsOverTime data;
+
+  const RequestsOverTimeChart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +21,13 @@ class RequestsOverTimeChart extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 180, // Reduced from 240
+          height: 180,
           child: LineChart(
             LineChartData(
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                horizontalInterval: 1,
+                horizontalInterval: data.interval,
                 getDrawingHorizontalLine: (value) {
                   return const FlLine(
                     color: AppColors.line,
@@ -43,19 +46,11 @@ class RequestsOverTimeChart extends StatelessWidget {
                     reservedSize: 24,
                     interval: 1,
                     getTitlesWidget: (value, meta) {
-                      String text = '';
-                      switch (value.toInt()) {
-                        case 0: text = 'Feb'; break;
-                        case 1: text = 'Mar'; break;
-                        case 2: text = 'Apr'; break;
-                        case 3: text = 'May'; break;
-                        case 4: text = 'Jun'; break;
-                        case 5: text = 'Jul'; break;
-                        case 6: text = 'Aug'; break;
-                        case 7: text = 'Sep'; break;
-                      }
+                      final index = value.toInt();
+                      if (index < 0 || index >= data.spots.length) return const SizedBox.shrink();
+                      
                       return Text(
-                        text,
+                        data.spots[index].label,
                         style: textTheme.labelLarge?.copyWith(
                           color: AppColors.ink400,
                           fontSize: 9,
@@ -69,21 +64,14 @@ class RequestsOverTimeChart extends StatelessWidget {
               ),
               borderData: FlBorderData(show: false),
               minX: 0,
-              maxX: 7,
+              maxX: (data.spots.length - 1).toDouble(),
               minY: 0,
-              maxY: 3,
+              maxY: data.maxY,
               lineBarsData: [
                 LineChartBarData(
-                  spots: const [
-                    FlSpot(0, 1.2),
-                    FlSpot(1, 0.8),
-                    FlSpot(2, 1.2),
-                    FlSpot(3, 0.8),
-                    FlSpot(4, 1.2),
-                    FlSpot(5, 1.2),
-                    FlSpot(6, 1.8),
-                    FlSpot(7, 0.8),
-                  ],
+                  spots: data.spots
+                      .map((s) => FlSpot(s.spotIndex.toDouble(), s.count.toDouble()))
+                      .toList(),
                   isCurved: false,
                   color: AppColors.blue500,
                   barWidth: 2,

@@ -4,6 +4,7 @@ import '../../features/customer/presentation/pages/customer_dashboard_page.dart'
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/profile_setup_page.dart';
+import '../../features/auth/presentation/pages/splash_screen.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/dealer/presentation/pages/dealer_dashboard_page.dart';
 import '../../features/service_person/presentation/pages/technician_dashboard_page.dart';
@@ -15,14 +16,15 @@ import '../../core/network/token_manager.dart';
 
 class AppRouter {
   static final router = GoRouter(
-    initialLocation: RouteNames.login,
+    initialLocation: RouteNames.splash,
     redirect: (context, state) {
       final tokenManager = sl<TokenManager>();
       final bool loggedIn = tokenManager.hasToken();
       print("state.matchedLocation => ${state.matchedLocation}");
       final bool isAuthPath = state.matchedLocation == RouteNames.login || 
                              state.matchedLocation == RouteNames.otp ||
-                             state.matchedLocation == RouteNames.profileSetup;
+                             state.matchedLocation == RouteNames.profileSetup ||
+                             state.matchedLocation == RouteNames.splash;
       print("isAuthPath => $isAuthPath");
 
       if (!loggedIn) {
@@ -54,6 +56,10 @@ class AppRouter {
       return null;
     },
     routes: [
+      GoRoute(
+        path: RouteNames.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: RouteNames.login,
         builder: (context, state) => BlocProvider(

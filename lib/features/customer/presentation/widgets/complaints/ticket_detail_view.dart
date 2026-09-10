@@ -97,40 +97,83 @@ class TicketDetailView extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: AppColors.bg.withOpacity(0.4),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.line.withOpacity(0.8)),
             ),
-            child: Row(
-              children: [
-                _SummaryItem(
-                  label: 'STATUS',
-                  value: ticket.status.toUpperCase(),
-                  valueColor: AppColors.blue500,
-                  icon: Icons.info_outline,
-                ),
-                const _VerticalDivider(),
-                _SummaryItem(
-                  label: 'PRIORITY',
-                  value: ticket.priority.toUpperCase(),
-                  valueColor: AppColors.orange500,
-                  icon: Icons.priority_high,
-                ),
-                const _VerticalDivider(),
-                _SummaryItem(
-                  label: 'SITE LOCATION',
-                  value: ticket.siteLocation ?? 'Not specified',
-                  icon: Icons.location_on_outlined,
-                ),
-                const _VerticalDivider(),
-                _SummaryItem(
-                  label: 'RAISED ON',
-                  value: '${ticket.createdAt.day} ${_getMonth(ticket.createdAt.month)}, ${ticket.createdAt.year}',
-                  icon: Icons.calendar_today_outlined,
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final items = [
+                  _SummaryItem(
+                    label: 'STATUS',
+                    value: ticket.status.toUpperCase(),
+                    valueColor: AppColors.blue500,
+                    icon: Icons.info_outline,
+                  ),
+                  _SummaryItem(
+                    label: 'PRIORITY',
+                    value: ticket.priority.toUpperCase(),
+                    valueColor: AppColors.orange500,
+                    icon: Icons.priority_high,
+                  ),
+                  _SummaryItem(
+                    label: 'SITE LOCATION',
+                    value: ticket.siteLocation ?? 'Not specified',
+                    icon: Icons.location_on_outlined,
+                  ),
+                  _SummaryItem(
+                    label: 'RAISED ON',
+                    value: '${ticket.createdAt.day} ${_getMonth(ticket.createdAt.month)}, ${ticket.createdAt.year}',
+                    icon: Icons.calendar_today_outlined,
+                  ),
+                ];
+
+                // Below ~560px (phones) a single row of four items with
+                // three dividers has no room to show real values, so we
+                // switch to a two-column grid instead.
+                // Note: _SummaryItem's own root widget is already an
+                // Expanded, so it can drop straight into these Rows as
+                // a flex child — don't wrap it in another Expanded.
+                if (constraints.maxWidth < 560) {
+                  return Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          items[0],
+                          const SizedBox(width: 16),
+                          items[1],
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      const Divider(height: 1, color: AppColors.line),
+                      const SizedBox(height: 18),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          items[2],
+                          const SizedBox(width: 16),
+                          items[3],
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    items[0],
+                    const _VerticalDivider(),
+                    items[1],
+                    const _VerticalDivider(),
+                    items[2],
+                    const _VerticalDivider(),
+                    items[3],
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -186,7 +229,7 @@ class _SummaryItem extends StatelessWidget {
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w900,
               color: valueColor ?? AppColors.ink900,
-              fontSize: 12.5,
+              fontSize: 10,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_state.dart';
@@ -11,7 +12,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     final result = await repository.sendOtp(phone);
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) {
+        debugPrint('AuthCubit sendOtp Error: ${failure.message}');
+        emit(AuthError(failure.message));
+      },
       (message) => emit(AuthOtpSent(message)),
     );
   }
@@ -20,7 +24,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     final result = await repository.verifyOtp(phone, otp);
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) {
+        debugPrint('AuthCubit verifyOtp Error: ${failure.message}');
+        emit(AuthError(failure.message));
+      },
       (data) => emit(AuthVerified(data)),
     );
   }
@@ -39,7 +46,10 @@ class AuthCubit extends Cubit<AuthState> {
       address: address,
     );
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) {
+        debugPrint('AuthCubit profileSetup Error: ${failure.message}');
+        emit(AuthError(failure.message));
+      },
       (data) => emit(AuthProfileUpdated(data)),
     );
   }

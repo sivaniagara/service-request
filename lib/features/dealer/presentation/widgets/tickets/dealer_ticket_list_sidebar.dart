@@ -22,48 +22,145 @@ class DealerTicketListSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 650;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Assigned Tickets (${tickets.length})',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.navy900,
+                      ),
+                    ),
+                    if (!isNarrow)
+                      const Text(
+                        'Routed to Green Sprout Agro',
+                        style: TextStyle(fontSize: 11, color: AppColors.ink400),
+                      ),
+                  ],
+                ),
+              ),
+              if (!isNarrow) ...[
+                _buildTableHeader(),
+                const Divider(height: 1),
+              ],
+              Expanded(
+                child: ListView.separated(
+                  padding: isNarrow ? const EdgeInsets.all(12) : EdgeInsets.zero,
+                  itemCount: tickets.length,
+                  separatorBuilder: (context, index) => isNarrow ? const SizedBox(height: 12) : const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final ticket = tickets[index];
+                    if (isNarrow) {
+                      return _buildMobileTicketCard(ticket);
+                    }
+                    return _buildTicketRow(ticket);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMobileTicketCard(DealerTicket ticket) {
+    final isSelected = ticket.ticketId == selectedTicketId;
+    return InkWell(
+      onTap: () => onTicketSelected(ticket.ticketId),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.blue500.withValues(alpha: 0.04) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.blue500 : AppColors.line,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Assigned Tickets (${tickets.length})',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.navy900,
-                  ),
+                  '#${ticket.ticketNumber}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.navy900, fontSize: 13),
                 ),
-                const Text(
-                  'Routed to Green Sprout Agro',
-                  style: TextStyle(fontSize: 11, color: AppColors.ink400),
+                _buildStatusPill(ticket.status),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              ticket.productName ?? (ticket.issueCategory.isNotEmpty ? ticket.issueCategory.first : 'Service Request'),
+              style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.navy900, fontSize: 15),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.person_outline, size: 14, color: AppColors.ink400),
+                const SizedBox(width: 6),
+                Text(ticket.customer.name, style: const TextStyle(color: AppColors.ink600, fontSize: 12)),
+                const SizedBox(width: 12),
+                const Icon(Icons.phone_android_outlined, size: 14, color: AppColors.ink400),
+                const SizedBox(width: 6),
+                Text(ticket.customer.phone, style: const TextStyle(color: AppColors.ink600, fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.location_on_outlined, size: 14, color: AppColors.ink400),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    ticket.customer.siteLocation,
+                    style: const TextStyle(color: AppColors.ink400, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
-          ),
-          _buildTableHeader(),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.separated(
-              itemCount: tickets.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final ticket = tickets[index];
-                return _buildTicketRow(ticket);
-              },
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: ticket.firstTechName != null
+                      ? Text(
+                          ticket.firstTechName!,
+                          style: const TextStyle(color: AppColors.blue500, fontWeight: FontWeight.bold, fontSize: 12),
+                        )
+                      : const Text(
+                          'Needs Tech Assignment',
+                          style: TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.ink400, size: 20),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

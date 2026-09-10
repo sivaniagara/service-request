@@ -102,63 +102,78 @@ class AdminTicketDetailView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (dialogContext) => BlocProvider.value(
-                            value: context.read<AdminDashboardCubit>(),
-                            child: AssignDealerDialog(ticket: ticket),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.storefront_outlined, size: 18),
-                      label: const Text('Assign Dealer(s)'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.purple500,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final assignButton = ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => BlocProvider.value(
+                          value: context.read<AdminDashboardCubit>(),
+                          child: AssignDealerDialog(ticket: ticket),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.storefront_outlined, size: 18),
+                    label: const Text('Assign Dealer(s)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.purple500,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
-                      builder: (context, state) {
-                        return ElevatedButton.icon(
-                          onPressed: state.isVerifyingCompletion
-                              ? null
-                              : () => _showVerifyCompletionDialog(context),
-                          icon: state.isVerifyingCompletion
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.verified_outlined, size: 18),
-                          label: Text(state.isVerifyingCompletion
-                              ? 'Verifying...'
-                              : 'Verify Completion'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.green500,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  );
+
+                  final verifyButton = BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
+                    builder: (context, state) {
+                      return ElevatedButton.icon(
+                        onPressed: state.isVerifyingCompletion
+                            ? null
+                            : () => _showVerifyCompletionDialog(context),
+                        icon: state.isVerifyingCompletion
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.verified_outlined, size: 18),
+                        label: Text(state.isVerifyingCompletion
+                            ? 'Verifying...'
+                            : 'Verify Completion'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.green500,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      );
+                    },
+                  );
+
+                  if (constraints.maxWidth < 450) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        assignButton,
+                        const SizedBox(height: 12),
+                        verifyButton,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(child: assignButton),
+                      const SizedBox(width: 12),
+                      Expanded(child: verifyButton),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 24),
               _buildAssignedDealersSection(),

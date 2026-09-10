@@ -20,6 +20,7 @@ import '../widgets/dealer_sub_dealer_management_view.dart';
 import '../../../../injection_container.dart';
 import '../../data/models/dealer_ticket_model.dart';
 import '../widgets/tickets/dealer_ticket_list_sidebar.dart';
+import '../widgets/dealer_mobile_dashboard.dart';
 
 class DealerDashboardPage extends StatelessWidget {
   const DealerDashboardPage({super.key});
@@ -28,108 +29,115 @@ class DealerDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => sl<DealerDashboardCubit>()..loadDashboard(),
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        body: BlocListener<DealerDashboardCubit, DealerDashboardState>(
-          listenWhen: (previous, current) => previous.error != current.error && current.error != null,
-          listener: (context, state) {
-            if (state.error != null) {
-              AwesomeDialog(
-                context: context,
-                dialogType: DialogType.error,
-                animType: AnimType.bottomSlide,
-                title: 'Data Load Error',
-                desc: state.error,
-                btnOkOnPress: () {},
-                width: 450,
-              ).show();
-            }
-          },
-          child: BlocBuilder<DealerDashboardCubit, DealerDashboardState>(
-            builder: (context, state) {
-              return Row(
-                children: [
-                AppSideNavigation(
-                  brandName: 'Green Sprout',
-                  brandSubtext: 'Dealer Workspace',
-                  onProfileTap: () => context.push(RouteNames.profileSetup),
-                  onLogoutTap: () async {
-                    await sl<TokenManager>().deleteToken();
-                    if (context.mounted) context.go(RouteNames.login);
-                  },
-                  items: [
-                    NavItem(
-                      icon: Icons.dashboard_outlined,
-                      label: 'Dashboard',
-                      isActive: state.activeTab == DealerDashboardTab.dashboard,
-                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.dashboard),
-                    ),
-                    NavItem(
-                      icon: Icons.build_outlined,
-                      label: 'Service Requests',
-                      badge: '3',
-                      isActive: state.activeTab == DealerDashboardTab.serviceRequests,
-                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.serviceRequests),
-                    ),
-                    NavItem(
-                      icon: Icons.people_outline,
-                      label: 'Service Team',
-                      badge: '4',
-                      isActive: state.activeTab == DealerDashboardTab.team,
-                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.team),
-                    ),
-                    NavItem(
-                      icon: Icons.account_tree_outlined,
-                      label: 'Sub Dealers',
-                      isActive: state.activeTab == DealerDashboardTab.subDealerManagement,
-                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.subDealerManagement),
-                    ),
-                    NavItem(
-                      icon: Icons.analytics_outlined,
-                      label: 'Performance',
-                      isActive: state.activeTab == DealerDashboardTab.reports,
-                      onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.reports),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(context, state),
-                        const SizedBox(height: 24),
-                        if (state.isLoading)
-                          const Expanded(child: Center(child: CircularProgressIndicator()))
-                        else if (state.error != null)
-                          Expanded(child: Center(child: Text(state.error!)))
-                        else if (state.activeTab == DealerDashboardTab.dashboard)
-                          _buildDashboardOverview(state)
-                        else if (state.activeTab == DealerDashboardTab.serviceRequests)
-                          _buildServiceRequests(context, state)
-                        else if (state.activeTab == DealerDashboardTab.team)
-                          _buildTeamView(state)
-                        else if (state.activeTab == DealerDashboardTab.subDealerManagement)
-                          const Expanded(child: DealerSubDealerManagementView())
-                        else if (state.activeTab == DealerDashboardTab.reports)
-                          _buildPerformanceReport(state)
-                        else
-                          Expanded(
-                            child: Center(
-                              child: Text('Content for ${state.activeTab.name} coming soon'),
-                            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 900) {
+            return const DealerMobileDashboard();
+          }
+          return Scaffold(
+            backgroundColor: AppColors.bg,
+            body: BlocListener<DealerDashboardCubit, DealerDashboardState>(
+              listenWhen: (previous, current) => previous.error != current.error && current.error != null,
+              listener: (context, state) {
+                if (state.error != null) {
+                  AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.error,
+                    animType: AnimType.bottomSlide,
+                    title: 'Data Load Error',
+                    desc: state.error,
+                    btnOkOnPress: () {},
+                    width: 450,
+                  ).show();
+                }
+              },
+              child: BlocBuilder<DealerDashboardCubit, DealerDashboardState>(
+                builder: (context, state) {
+                  return Row(
+                    children: [
+                      AppSideNavigation(
+                        brandName: 'Green Sprout',
+                        brandSubtext: 'Dealer Workspace',
+                        onProfileTap: () => context.push(RouteNames.profileSetup),
+                        onLogoutTap: () async {
+                          await sl<TokenManager>().deleteToken();
+                          if (context.mounted) context.go(RouteNames.login);
+                        },
+                        items: [
+                          NavItem(
+                            icon: Icons.dashboard_outlined,
+                            label: 'Dashboard',
+                            isActive: state.activeTab == DealerDashboardTab.dashboard,
+                            onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.dashboard),
                           ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+                          NavItem(
+                            icon: Icons.build_outlined,
+                            label: 'Service Requests',
+                            badge: '3',
+                            isActive: state.activeTab == DealerDashboardTab.serviceRequests,
+                            onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.serviceRequests),
+                          ),
+                          NavItem(
+                            icon: Icons.people_outline,
+                            label: 'Service Team',
+                            badge: '4',
+                            isActive: state.activeTab == DealerDashboardTab.team,
+                            onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.team),
+                          ),
+                          NavItem(
+                            icon: Icons.account_tree_outlined,
+                            label: 'Sub Dealers',
+                            isActive: state.activeTab == DealerDashboardTab.subDealerManagement,
+                            onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.subDealerManagement),
+                          ),
+                          NavItem(
+                            icon: Icons.analytics_outlined,
+                            label: 'Performance',
+                            isActive: state.activeTab == DealerDashboardTab.reports,
+                            onTap: () => context.read<DealerDashboardCubit>().changeTab(DealerDashboardTab.reports),
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHeader(context, state),
+                              const SizedBox(height: 24),
+                              if (state.isLoading)
+                                const Expanded(child: Center(child: CircularProgressIndicator()))
+                              else if (state.error != null)
+                                Expanded(child: Center(child: Text(state.error!)))
+                              else if (state.activeTab == DealerDashboardTab.dashboard)
+                                _buildDashboardOverview(state)
+                              else if (state.activeTab == DealerDashboardTab.serviceRequests)
+                                _buildServiceRequests(context, state)
+                              else if (state.activeTab == DealerDashboardTab.team)
+                                _buildTeamView(state)
+                              else if (state.activeTab == DealerDashboardTab.subDealerManagement)
+                                const Expanded(child: DealerSubDealerManagementView())
+                              else if (state.activeTab == DealerDashboardTab.reports)
+                                _buildPerformanceReport(state)
+                              else
+                                Expanded(
+                                  child: Center(
+                                    child: Text('Content for ${state.activeTab.name} coming soon'),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
-    ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/token_manager.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 
@@ -20,8 +21,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final message = await remoteDataSource.sendOtp(phone);
       return Right(message);
     } on ServerException catch (e) {
+      debugPrint('AuthRepositoryImpl sendOtp ServerException: ${e.message}');
       return Left(ServerFailure(e.message));
     } catch (e) {
+      debugPrint('AuthRepositoryImpl sendOtp error: $e');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -43,8 +46,10 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return Right(result);
     } on ServerException catch (e) {
+      debugPrint('AuthRepositoryImpl verifyOtp ServerException: ${e.message}');
       return Left(ServerFailure(e.message));
     } catch (e) {
+      debugPrint('AuthRepositoryImpl verifyOtp error: $e');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -73,8 +78,10 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return Right(result);
     } on ServerException catch (e) {
+      debugPrint('AuthRepositoryImpl profileSetup ServerException: ${e.message}');
       return Left(ServerFailure(e.message));
     } catch (e) {
+      debugPrint('AuthRepositoryImpl profileSetup error: $e');
       return Left(ServerFailure(e.toString()));
     }
   }

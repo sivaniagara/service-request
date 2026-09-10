@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../data/models/dealer_ticket_model.dart';
+import '../assign_technician_page.dart';
 import '../dealer_complaint_stepper.dart';
 import '../assign_technician_dialog.dart';
 import '../delegate_branch_dialog.dart';
 import '../../bloc/dealer_dashboard_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../delegate_branch_page.dart';
 
 class DealerTicketDetailView extends StatelessWidget {
   final DealerTicketDetail ticket;
@@ -49,6 +52,23 @@ class DealerTicketDetailView extends StatelessWidget {
                 color: AppColors.navy900,
               ),
             ),
+            if (ticket.customer != null) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.phone_android_outlined, size: 14, color: AppColors.ink400),
+                  const SizedBox(width: 6),
+                  Text(
+                    ticket.customer!.phone,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.ink600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 6),
             Text(
               ticket.description ?? '',
@@ -69,69 +89,113 @@ class DealerTicketDetailView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final delegateBtn = ElevatedButton.icon(
+                  onPressed: () {
+                    // Below the app's ~900px desktop breakpoint, the
+                    // fixed 540px dialog doesn't fit — use the
+                    // full-screen page instead.
+                    if (MediaQuery.of(context).size.width < 900) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => DelegateBranchPage(ticket: ticket)),
+                      );
+                    } else {
                       showDialog(
                         context: context,
                         builder: (dialogContext) => DelegateBranchDialog(ticket: ticket),
                       );
-                    },
-                    icon: const Icon(Icons.account_tree_outlined, size: 16),
-                    label: const Text('Delegate Branch'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF006D77),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      elevation: 0,
-                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
+                    }
+                  },
+                  icon: const Icon(Icons.account_tree_outlined, size: 16),
+                  label: const Text('Delegate Branch'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF006D77),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                    textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
+                );
+
+                final assignBtn = ElevatedButton.icon(
+                  onPressed: () {
+                    final cubit = context.read<DealerDashboardCubit>();
+                    if (MediaQuery.of(context).size.width < 900) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                            value: cubit,
+                            child: AssignTechnicianPage(ticket: ticket),
+                          ),
+                        ),
+                      );
+                    } else {
                       showDialog(
                         context: context,
                         builder: (dialogContext) => BlocProvider.value(
-                          value: context.read<DealerDashboardCubit>(),
+                          value: cubit,
                           child: AssignTechnicianDialog(ticket: ticket),
                         ),
                       );
-                    },
-                    icon: const Icon(Icons.person_outline, size: 16),
-                    label: const Text('Assign Tech'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      elevation: 0,
-                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
+                    }
+                  },
+                  icon: const Icon(Icons.person_outline, size: 16),
+                  label: const Text('Assign Tech'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                    textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.check_circle_outline, size: 16),
-                    label: const Text('Complete Task'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.green500,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      elevation: 0,
-                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
+                );
+
+                final completeBtn = ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.check_circle_outline, size: 16),
+                  label: const Text('Complete Task'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.green500,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                    textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
+                );
+
+                if (constraints.maxWidth < 600) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: delegateBtn),
+                          const SizedBox(width: 8),
+                          Expanded(child: assignBtn),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      completeBtn,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: delegateBtn),
+                    const SizedBox(width: 8),
+                    Expanded(child: assignBtn),
+                    const SizedBox(width: 8),
+                    Expanded(child: completeBtn),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 32),
             _buildTechnicianInfo(),

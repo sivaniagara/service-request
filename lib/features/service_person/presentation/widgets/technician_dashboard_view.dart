@@ -38,97 +38,244 @@ class TechnicianDashboardView extends StatelessWidget {
   }
 
   Widget _buildProfileHeader() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+        
+        final avatar = CircleAvatar(
+          radius: 35,
+          backgroundColor: AppColors.amber500,
+          child: Text(
+            data.profile.name.isNotEmpty 
+                ? data.profile.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').join('')
+                : '??',
+            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        );
+
+        final details = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    data.profile.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    data.profile.role,
+                    style: const TextStyle(color: AppColors.green500, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 16,
+              runSpacing: 4,
+              children: [
+                Text(
+                  data.profile.dealerName,
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                ),
+                Text(
+                  '•  ${data.profile.phone}',
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                ),
+                Text(
+                  '•  ${data.profile.email}',
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                ),
+              ],
+            ),
+          ],
+        );
+
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.navy900,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  avatar,
+                  const SizedBox(width: 20),
+                  Expanded(child: details),
+                ],
+              ),
+              if (isNarrow) ...[
+                const SizedBox(height: 20),
+                _buildStatusSwitcher(),
+              ] else ...[
+                const SizedBox(height: 0), // Placeholder if needed
+              ],
+              if (!isNarrow) ...[
+                const SizedBox(height: 0),
+                // The switcher is in the Row in original code, let's keep it that way for wide
+              ]
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Refined _buildProfileHeader to actually put switcher back in Row if wide
+  Widget _buildProfileHeaderWide() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.navy900,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 35,
-            backgroundColor: AppColors.amber500,
-            child: Text(
-              data.profile.name.isNotEmpty 
-                  ? data.profile.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').join('')
-                  : '??',
-              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 800) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      data.profile.name,
-                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
+                    CircleAvatar(
+                      radius: 35,
+                      backgroundColor: AppColors.amber500,
                       child: Text(
-                        data.profile.role,
-                        style: const TextStyle(color: AppColors.green500, fontSize: 12, fontWeight: FontWeight.bold),
+                        data.profile.name.isNotEmpty 
+                            ? data.profile.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').join('')
+                            : '??',
+                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data.profile.name,
+                            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            data.profile.role,
+                            style: const TextStyle(color: AppColors.green500, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 4,
+                const SizedBox(height: 16),
+                _buildStatusSwitcher(),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundColor: AppColors.amber500,
+                child: Text(
+                  data.profile.name.isNotEmpty 
+                      ? data.profile.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').join('')
+                      : '??',
+                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      data.profile.dealerName,
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                    Row(
+                      children: [
+                        Text(
+                          data.profile.name,
+                          style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            data.profile.role,
+                            style: const TextStyle(color: AppColors.green500, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '•  ${data.profile.phone}',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
-                    ),
-                    Text(
-                      '•  ${data.profile.email}',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          data.profile.dealerName,
+                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                        ),
+                        Text(
+                          '•  ${data.profile.phone}',
+                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          _buildStatusSwitcher(),
-        ],
+              ),
+              _buildStatusSwitcher(),
+            ],
+          );
+        }
       ),
     );
   }
 
   Widget _buildStatusSwitcher() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12.0),
-            child: Text('Status:', style: TextStyle(color: Colors.white70, fontSize: 13)),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 400;
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
-          _buildStatusItem('Available', isSelected: data.profile.availabilityStatus == 'Available'),
-          _buildStatusItem('On job', isSelected: data.profile.availabilityStatus == 'On job'),
-          _buildStatusItem('Offline', isSelected: data.profile.availabilityStatus == 'Offline'),
-        ],
-      ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                if (!isNarrow)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Text('Status:', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  ),
+                _buildStatusItem('Available', isSelected: data.profile.availabilityStatus == 'Available'),
+                _buildStatusItem('On job', isSelected: data.profile.availabilityStatus == 'On job'),
+                _buildStatusItem('Offline', isSelected: data.profile.availabilityStatus == 'Offline'),
+              ],
+            ),
+          ),
+        );
+      }
     );
   }
 
@@ -151,52 +298,106 @@ class TechnicianDashboardView extends StatelessWidget {
   }
 
   Widget _buildMetricsGrid() {
-    return Row(
-      children: [
-        Expanded(
-          child: KPICard(
-            title: 'Active Assignments',
-            value: data.stats.activeAssignments.toString(),
-            subtitle: '${data.stats.highPriorityCount} high priority',
-            subtitleColor: AppColors.amber500,
-            icon: Icons.build_outlined,
-            iconColor: AppColors.blue500,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: KPICard(
-            title: 'Resolved Overall',
-            value: data.stats.resolvedOverall.toString(),
-            subtitle: '${data.stats.onTimeResolutionRate} on-time resolution',
-            subtitleColor: AppColors.green500,
-            icon: Icons.check_circle_outline,
-            iconColor: AppColors.green500,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: KPICard(
-            title: 'Customer Rating',
-            value: data.stats.customerRating.toString(),
-            subtitle: 'Based on recent reviews',
-            icon: Icons.star_border,
-            iconColor: AppColors.amber500,
-            showStar: true,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: KPICard(
-            title: 'First-Time Fix Rate',
-            value: '${data.stats.firstTimeFixRate}%',
-            subtitle: 'Zero repeat complaints',
-            subtitleColor: AppColors.purple500,
-            icon: Icons.workspace_premium_outlined,
-            iconColor: AppColors.purple500,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 600) {
+          return Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: KPICard(
+                      title: 'Active',
+                      value: data.stats.activeAssignments.toString(),
+                      icon: Icons.build_outlined,
+                      iconColor: AppColors.blue500, subtitle: '',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: KPICard(
+                      title: 'Resolved',
+                      value: data.stats.resolvedOverall.toString(),
+                      icon: Icons.check_circle_outline,
+                      iconColor: AppColors.green500, subtitle: '',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: KPICard(
+                      title: 'Rating',
+                      value: data.stats.customerRating.toString(),
+                      icon: Icons.star_border,
+                      iconColor: AppColors.amber500,
+                      showStar: true, subtitle: '',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: KPICard(
+                      title: 'Fix Rate',
+                      value: '${data.stats.firstTimeFixRate}%',
+                      icon: Icons.workspace_premium_outlined,
+                      iconColor: AppColors.purple500, subtitle: '',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(
+              child: KPICard(
+                title: 'Active Assignments',
+                value: data.stats.activeAssignments.toString(),
+                subtitle: '${data.stats.highPriorityCount} high priority',
+                subtitleColor: AppColors.amber500,
+                icon: Icons.build_outlined,
+                iconColor: AppColors.blue500,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: KPICard(
+                title: 'Resolved Overall',
+                value: data.stats.resolvedOverall.toString(),
+                subtitle: '${data.stats.onTimeResolutionRate} on-time resolution',
+                subtitleColor: AppColors.green500,
+                icon: Icons.check_circle_outline,
+                iconColor: AppColors.green500,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: KPICard(
+                title: 'Customer Rating',
+                value: data.stats.customerRating.toString(),
+                subtitle: 'Based on recent reviews',
+                icon: Icons.star_border,
+                iconColor: AppColors.amber500,
+                showStar: true,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: KPICard(
+                title: 'First-Time Fix Rate',
+                value: '${data.stats.firstTimeFixRate}%',
+                subtitle: 'Zero repeat complaints',
+                subtitleColor: AppColors.purple500,
+                icon: Icons.workspace_premium_outlined,
+                iconColor: AppColors.purple500,
+              ),
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -255,63 +456,116 @@ class TechnicianDashboardView extends StatelessWidget {
   }
 
   Widget _buildJobItem(ActiveWorkOrder job) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.line),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StatusPill.priority(job.priority),
-          const SizedBox(width: 16),
-          Expanded(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+        
+        if (isNarrow) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.bg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.line),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    StatusPill.priority(job.priority),
                     Text(job.ticketNumber, style: const TextStyle(color: AppColors.ink400, fontSize: 12, fontWeight: FontWeight.bold)),
-                    Text(job.status, style: const TextStyle(color: AppColors.blue500, fontSize: 12, fontWeight: FontWeight.bold)),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(job.title, style: const TextStyle(color: AppColors.ink900, fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.person_outline, size: 14, color: AppColors.ink400),
-                    const SizedBox(width: 6),
-                    Text(job.customer.name, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
-                    const SizedBox(width: 20),
                     const Icon(Icons.location_on_outlined, size: 14, color: AppColors.ink400),
                     const SizedBox(width: 6),
                     Expanded(child: Text(job.customer.siteLocation, style: const TextStyle(color: AppColors.ink600, fontSize: 13), overflow: TextOverflow.ellipsis)),
-                    const SizedBox(width: 20),
-                    const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.ink400),
-                    const SizedBox(width: 6),
-                    Text(job.createdAt, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
                   ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => onViewTicket(job.ticketId),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.navy900,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('View Details'),
+                  ),
                 ),
               ],
             ),
+          );
+        }
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.line),
           ),
-          const SizedBox(width: 20),
-          ElevatedButton(
-            onPressed: () => onViewTicket(job.ticketId),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.navy900,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('View Details'),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StatusPill.priority(job.priority),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(job.ticketNumber, style: const TextStyle(color: AppColors.ink400, fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text(job.status, style: const TextStyle(color: AppColors.blue500, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(job.title, style: const TextStyle(color: AppColors.ink900, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.person_outline, size: 14, color: AppColors.ink400),
+                        const SizedBox(width: 6),
+                        Text(job.customer.name, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
+                        const SizedBox(width: 20),
+                        const Icon(Icons.location_on_outlined, size: 14, color: AppColors.ink400),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(job.customer.siteLocation, style: const TextStyle(color: AppColors.ink600, fontSize: 13), overflow: TextOverflow.ellipsis)),
+                        const SizedBox(width: 20),
+                        const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.ink400),
+                        const SizedBox(width: 6),
+                        Text(job.createdAt, style: const TextStyle(color: AppColors.ink600, fontSize: 13)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                onPressed: () => onViewTicket(job.ticketId),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.navy900,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('View Details'),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/models/admin_dealer_model.dart';
 import '../../data/models/admin_ticket_model.dart';
 import '../../data/repositories/admin_dashboard_repository_impl.dart';
 import 'admin_dashboard_state.dart';
@@ -26,23 +27,8 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     try {
       final model = await repository.getAdminTickets();
       
-      // Safety Merge: If we have dealers from the management API, ensure they are in the assignment list
-      List<AdminDealerListItem> mergedList = List.from(model.dealerList);
-      if (state.dealers != null) {
-        for (final dealerData in state.dealers!.data) {
-          final exists = mergedList.any((d) => d.dealerId == dealerData.dealerId);
-          if (!exists) {
-            mergedList.add(AdminDealerListItem(
-              dealerId: dealerData.dealerId,
-              dealerCode: dealerData.dealerCode,
-              name: dealerData.name,
-              region: dealerData.region,
-              rating: dealerData.performance.rating,
-              techniciansCount: 0, // Default for newly added dealers until synced
-            ));
-          }
-        }
-      }
+      // Update the global dealer list by merging ticket-specific list with management list
+      final mergedList = _mergeDealers(model.dealerList, state.dealers?.data);
 
       emit(state.copyWith(
         isLoading: false,
@@ -79,7 +65,15 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final model = await repository.getAdminDealers();
-      emit(state.copyWith(isLoading: false, dealers: model));
+      
+      // Update the global dealer list for assignment consistency
+      final mergedList = _mergeDealers(state.dealerList ?? [], model.data);
+      
+      emit(state.copyWith(
+        isLoading: false, 
+        dealers: model,
+        dealerList: mergedList,
+      ));
     } catch (e, stackTrace) {
       debugPrint("loadDealers error: $e");
       debugPrint("loadDealers : $stackTrace");
@@ -87,11 +81,49 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     }
   }
 
-  Future<void> loadReports() async {
+  /// Synchronizes two dealer data sources (Assignment List and Management List)
+  /// to ensure UI reflects newly added dealers immediately.
+  List<AdminDealerListItem> _mergeDealers(
+    List<AdminDealerListItem> currentList,
+    List<DealerData>? freshData,
+  ) {
+    List<AdminDealerListItem> merged = List.from(currentList);
+    
+    if (freshData != null) {
+      for (final dealer in freshData) {
+        final index = merged.indexWhere((d) => d.dealerId == dealer.dealerId);
+        if (index != -1) {
+          // Update existing with fresh management data while preserving tech count if not present
+          merged[index] = AdminDealerListItem(
+            dealerId: dealer.dealerId,
+            dealerCode: dealer.dealerCode,
+            name: dealer.name,
+            region: dealer.region,
+            rating: dealer.performance.rating,
+            techniciansCount: merged[index].techniciansCount, phone: dealer.phone,
+          );
+        } else {
+          // Add new dealer
+          merged.add(AdminDealerListItem(
+            dealerId: dealer.dealerId,
+            dealerCode: dealer.dealerCode,
+            name: dealer.name,
+            region: dealer.region,
+            rating: dealer.performance.rating,
+            techniciansCount: 0, phone: dealer.phone,
+          ));
+        }
+      }
+    }
+    return merged;
+  }
+
+
+  Future<void> loadReports({String timeframe = '30D', String? region}) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final summary = await repository.getReportSummary();
-      final sla = await repository.getSlaCompliance();
+      final summary = await repository.getReportSummary(timeframe: timeframe, region: region);
+      final sla = await repository.getSlaCompliance(timeframe: timeframe);
       emit(state.copyWith(
         isLoading: false,
         reportSummary: summary.data,
@@ -136,7 +168,12 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       await repository.assignDealer(ticketId, dealerIds, instructions);
-      await selectTicket(ticketId); // Refresh ticket details
+      
+      // Multi-source refresh: ensure ticket details, dealer capacities, and dashboard metrics stay synced
+      await selectTicket(ticketId);
+      await loadDealers();
+      await loadDashboard();
+      
       emit(state.copyWith(isLoading: false));
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));

@@ -27,31 +27,33 @@ class TopDealersCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Top Dealers by Volume',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.navy900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Top Dealers by Volume',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.navy900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Requests dispatched & completed',
-                    style: TextStyle(fontSize: 12, color: AppColors.ink400),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Requests dispatched & completed',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.ink400),
+                    ),
+                  ],
+                ),
               ),
               TextButton(
                 onPressed: () {},
+                style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
                 child: const Text(
-                  'View All Dealers ›',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  'View All ›',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -90,13 +92,13 @@ class TopDealersCard extends StatelessWidget {
   }
 
   Widget _buildDealerItem(
-    BuildContext context,
-    String name,
-    String location,
-    int count,
-    double progress,
-    Color color,
-  ) {
+      BuildContext context,
+      String name,
+      String location,
+      int count,
+      double progress,
+      Color color,
+      ) {
     return Row(
       children: [
         Expanded(

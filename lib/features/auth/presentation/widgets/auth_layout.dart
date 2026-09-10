@@ -26,17 +26,17 @@ class AuthLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          // Left side: Form
-          Expanded(
-            flex: 1,
-            child: Stack(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isMobile = constraints.maxWidth < 800;
+
+          if (isMobile) {
+            return Stack(
               children: [
                 if (onBack != null)
                   Positioned(
-                    top: 40,
-                    left: 40,
+                    top: 20,
+                    left: 20,
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
                       onPressed: onBack,
@@ -44,7 +44,7 @@ class AuthLayout extends StatelessWidget {
                   ),
                 Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,79 +52,132 @@ class AuthLayout extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: AppColors.ink900,
                           ),
                         ),
                         if (subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 8),
                           Text(
                             subtitle,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 14,
                               color: AppColors.ink600,
                             ),
                           ),
                         ],
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 32),
                         child,
                       ],
                     ),
                   ),
                 ),
               ],
-            ),
-          ),
-          // Right side: Illustration
-          Expanded(
-            flex: 1,
-            child: Container(
-              margin: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.navy900,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(48.0),
-                        child: _buildIllustration(),
+            );
+          }
+
+          return Row(
+            children: [
+              // Left side: Form
+              Expanded(
+                flex: 1,
+                child: Stack(
+                  children: [
+                    if (onBack != null)
+                      Positioned(
+                        top: 40,
+                        left: 40,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: onBack,
+                        ),
+                      ),
+                    Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.ink900,
+                              ),
+                            ),
+                            if (subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.ink600,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 48),
+                            child,
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(40.0), // Increased padding to match design better
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          illustrationTitle,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          illustrationSubtitle,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
-        ],
+              // Right side: Illustration
+              Expanded(
+                flex: 1,
+                child: Container(
+                  margin: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.navy900,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(48.0),
+                            child: _buildIllustration(),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(40.0), // Increased padding to match design better
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              illustrationTitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              illustrationSubtitle,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

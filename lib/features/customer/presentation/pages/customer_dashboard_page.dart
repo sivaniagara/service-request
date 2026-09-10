@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import '../../../../core/network/token_manager.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_side_navigation.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../injection_container.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
@@ -14,6 +16,7 @@ import '../widgets/complaints/ticket_list_sidebar.dart';
 import '../widgets/complaints/ticket_detail_view.dart';
 import '../widgets/reports/reports_view.dart';
 import '../widgets/complaints/raise_complaint_dialog.dart';
+import '../widgets/dashboard/customer_mobile_dashboard.dart';
 
 class CustomerDashboardPage extends StatelessWidget {
   const CustomerDashboardPage({super.key});
@@ -22,72 +25,92 @@ class CustomerDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => sl<DashboardCubit>()..loadDashboard(),
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        body: BlocBuilder<DashboardCubit, DashboardState>(
-          builder: (context, state) {
-            final activeCount = state.dashboardData?.metrics.inProgressCount ?? 0;
-            return Row(
-              children: [
-                AppSideNavigation(
-                  brandName: 'Green Sprout',
-                  brandSubtext: 'Customer Portal',
-                  onProfileTap: () => context.push(RouteNames.profileSetup),
-                  onLogoutTap: () async {
-                    await sl<TokenManager>().deleteToken();
-                    if (context.mounted) context.go(RouteNames.login);
-                  },
-                  items: [
-                    NavItem(
-                      icon: Icons.dashboard_outlined,
-                      label: 'Overview',
-                      isActive: state.activeTab == DashboardTab.overview,
-                      onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.overview),
-                    ),
-                    NavItem(
-                      icon: Icons.build_outlined,
-                      label: 'Complaints',
-                      badge: activeCount > 0 ? '$activeCount active' : null,
-                      isActive: state.activeTab == DashboardTab.complaints,
-                      onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.complaints),
-                    ),
-                    NavItem(
-                      icon: Icons.analytics_outlined,
-                      label: 'Reports',
-                      isActive: state.activeTab == DashboardTab.reports,
-                      onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.reports),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(context, state),
-                        const SizedBox(height: 24),
-                        if (state.isLoading && 
-                            state.dashboardData == null && 
-                            state.tickets == null && 
-                            state.report == null)
-                          const Expanded(child: Center(child: CircularProgressIndicator()))
-                        else if (state.error != null)
-                          Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
-                        else if (state.activeTab == DashboardTab.overview)
-                          _buildOverview(state, context)
-                        else if (state.activeTab == DashboardTab.complaints)
-                          _buildComplaints(context, state)
-                        else if (state.activeTab == DashboardTab.reports)
-                          _buildReports(state),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (ResponsiveUtils.isMobile(context)) {
+            return const CustomerMobileDashboard();
+          }
+          return Scaffold(
+            backgroundColor: AppColors.bg,
+            body: BlocListener<DashboardCubit, DashboardState>(
+              listenWhen: (previous, current) => previous.error != current.error && current.error != null,
+              listener: (context, state) {
+                AwesomeDialog(
+                  context: context,
+                  dialogType: DialogType.error,
+                  animType: AnimType.bottomSlide,
+                  title: 'Error Occurred',
+                  desc: state.error,
+                  btnOkOnPress: () {},
+                  width: 400,
+                ).show();
+              },
+              child: BlocBuilder<DashboardCubit, DashboardState>(
+                builder: (context, state) {
+                final activeCount = state.dashboardData?.metrics.inProgressCount ?? 0;
+                return Row(
+                  children: [
+                    AppSideNavigation(
+                      brandName: 'Green Sprout',
+                      brandSubtext: 'Customer Portal',
+                      onProfileTap: () => context.push(RouteNames.profileSetup),
+                      onLogoutTap: () async {
+                        await sl<TokenManager>().deleteToken();
+                        if (context.mounted) context.go(RouteNames.login);
+                      },
+                      items: [
+                        NavItem(
+                          icon: Icons.dashboard_outlined,
+                          label: 'Overview',
+                          isActive: state.activeTab == DashboardTab.overview,
+                          onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.overview),
+                        ),
+                        NavItem(
+                          icon: Icons.build_outlined,
+                          label: 'Complaints',
+                          badge: activeCount > 0 ? '$activeCount active' : null,
+                          isActive: state.activeTab == DashboardTab.complaints,
+                          onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.complaints),
+                        ),
+                        NavItem(
+                          icon: Icons.analytics_outlined,
+                          label: 'Reports',
+                          isActive: state.activeTab == DashboardTab.reports,
+                          onTap: () => context.read<DashboardCubit>().changeTab(DashboardTab.reports),
+                        ),
                       ],
                     ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(context, state),
+                            const SizedBox(height: 24),
+                            if (state.isLoading && 
+                                state.dashboardData == null && 
+                                state.tickets == null && 
+                                state.report == null)
+                              const Expanded(child: Center(child: CircularProgressIndicator()))
+                            else if (state.error != null)
+                              Expanded(child: Center(child: Text(state.error!, style: const TextStyle(color: AppColors.red500))))
+                            else if (state.activeTab == DashboardTab.overview)
+                              _buildOverview(state, context)
+                            else if (state.activeTab == DashboardTab.complaints)
+                              _buildComplaints(context, state)
+                            else if (state.activeTab == DashboardTab.reports)
+                              _buildReports(state),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ));
+        },
       ),
     );
   }

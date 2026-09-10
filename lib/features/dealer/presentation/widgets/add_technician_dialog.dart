@@ -7,7 +7,11 @@ import '../../../../core/theme/app_theme.dart';
 import '../bloc/dealer_dashboard_cubit.dart';
 
 class AddTechnicianDialog extends StatefulWidget {
-  const AddTechnicianDialog({super.key});
+  /// When true, renders as plain scrollable content for a full-screen
+  /// phone page instead of the fixed 640px [Dialog] used on desktop.
+  final bool isFullScreen;
+
+  const AddTechnicianDialog({super.key, this.isFullScreen = false});
 
   @override
   State<AddTechnicianDialog> createState() => _AddTechnicianDialogState();
@@ -18,7 +22,7 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   String _countryCode = '+91';
 
   final List<String> _allSkills = [
@@ -39,6 +43,84 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final nameField = _buildTextField(
+      'Full Name*',
+      'e.g. Ramesh K.',
+      _nameController,
+      validator: (v) => v!.isEmpty ? 'Required' : null,
+    );
+    final phoneField = _buildTextField(
+      'Phone Number*',
+      '9876543210',
+      _phoneController,
+      keyboardType: TextInputType.phone,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(10),
+      ],
+      validator: (v) => v!.isEmpty ? 'Required' : null,
+      prefixIcon: CountryCodePicker(
+        onChanged: (code) {
+          setState(() {
+            _countryCode = code.dialCode!;
+          });
+        },
+        initialSelection: 'IN',
+        favorite: const ['+91', 'IN'],
+        showCountryOnly: false,
+        showOnlyCountryWhenClosed: false,
+        alignLeft: false,
+        padding: EdgeInsets.zero,
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.navy900,
+        ),
+      ),
+    );
+
+    final formBody = Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!widget.isFullScreen) ...[
+            _buildHeader(context),
+            const SizedBox(height: 32),
+          ],
+          if (widget.isFullScreen) ...[
+            nameField,
+            const SizedBox(height: 20),
+            phoneField,
+          ] else
+            Row(
+              children: [
+                Expanded(child: nameField),
+                const SizedBox(width: 20),
+                Expanded(child: phoneField),
+              ],
+            ),
+          SizedBox(height: widget.isFullScreen ? 20 : 24),
+          _buildTextField(
+            'Email Address*',
+            'technician@example.com',
+            _emailController,
+            keyboardType: TextInputType.emailAddress,
+            validator: (v) => v!.isEmpty ? 'Required' : null,
+          ),
+          SizedBox(height: widget.isFullScreen ? 20 : 24),
+          _buildSkillsSection(),
+          SizedBox(height: widget.isFullScreen ? 28 : 48),
+          _buildFooter(context),
+        ],
+      ),
+    );
+
+    if (widget.isFullScreen) {
+      return formBody;
+    }
+
     return Dialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
@@ -46,73 +128,7 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
       child: Container(
         width: 640,
         padding: const EdgeInsets.all(32),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      'Full Name*',
-                      'e.g. Ramesh K.',
-                      _nameController,
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: _buildTextField(
-                      'Phone Number*',
-                      '9876543210',
-                      _phoneController,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
-                      ],
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                      prefixIcon: CountryCodePicker(
-                        onChanged: (code) {
-                          setState(() {
-                            _countryCode = code.dialCode!;
-                          });
-                        },
-                        initialSelection: 'IN',
-                        favorite: const ['+91', 'IN'],
-                        showCountryOnly: false,
-                        showOnlyCountryWhenClosed: false,
-                        alignLeft: false,
-                        padding: EdgeInsets.zero,
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.navy900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                'Email Address*',
-                'technician@example.com',
-                _emailController,
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 24),
-              _buildSkillsSection(),
-              const SizedBox(height: 48),
-              _buildFooter(context),
-            ],
-          ),
-        ),
+        child: formBody,
       ),
     );
   }
@@ -172,12 +188,12 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
   }
 
   Widget _buildDropdownField(
-    String label,
-    List<String> items,
-    String value,
-    ValueChanged<String?> onChanged, {
-    IconData? prefixIcon,
-  }) {
+      String label,
+      List<String> items,
+      String value,
+      ValueChanged<String?> onChanged, {
+        IconData? prefixIcon,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -225,14 +241,14 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
   }
 
   Widget _buildTextField(
-    String label,
-    String hint,
-    TextEditingController controller, {
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    String? Function(String?)? validator,
-    Widget? prefixIcon,
-  }) {
+      String label,
+      String hint,
+      TextEditingController controller, {
+        TextInputType? keyboardType,
+        List<TextInputFormatter>? inputFormatters,
+        String? Function(String?)? validator,
+        Widget? prefixIcon,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -362,92 +378,107 @@ class _AddTechnicianDialogState extends State<AddTechnicianDialog> {
   }
 
   Widget _buildFooter(BuildContext context) {
+    final cancelButton = TextButton(
+      onPressed: () => Navigator.pop(context),
+      style: widget.isFullScreen ? TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)) : null,
+      child: const Text(
+        'Cancel',
+        style: TextStyle(
+          color: AppColors.ink600,
+          fontWeight: FontWeight.w900,
+          fontSize: 15,
+        ),
+      ),
+    );
+
+    final submitButton = ElevatedButton(
+      onPressed: () async {
+        if (_formKey.currentState!.validate()) {
+          final fullPhone = '$_countryCode${_phoneController.text}';
+
+          final requestBody = {
+            "name": _nameController.text,
+            "phone": fullPhone,
+            "email": _emailController.text,
+            "rating": 5.0,
+            "skills": _selectedSkills.toList(),
+            "travelDistance": "0 km",
+            "estimatedEta": "0 mins"
+          };
+
+          // Show Loading
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const Center(child: CircularProgressIndicator()),
+          );
+
+          try {
+            await context.read<DealerDashboardCubit>().addTechnician(requestBody);
+
+            // Close loading
+            if (!mounted) return;
+            Navigator.pop(context);
+
+            // Show Success
+            AwesomeDialog(
+              context: context,
+              dialogType: DialogType.success,
+              animType: AnimType.bottomSlide,
+              title: 'Success',
+              desc: 'Field Technician added successfully.',
+              btnOkOnPress: () {
+                Navigator.pop(context);
+              },
+              width: 400,
+            ).show();
+          } catch (e) {
+            // Close loading
+            if (!mounted) return;
+            Navigator.pop(context);
+
+            // Show Error
+            AwesomeDialog(
+              context: context,
+              dialogType: DialogType.error,
+              animType: AnimType.bottomSlide,
+              title: 'Error',
+              desc: e.toString(),
+              btnOkOnPress: () {},
+              width: 400,
+            ).show();
+          }
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.navy900,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: widget.isFullScreen ? 0 : 32, vertical: widget.isFullScreen ? 18 : 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+      ),
+      child: const Text(
+        'Add to Team',
+        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+      ),
+    );
+
+    if (widget.isFullScreen) {
+      return Column(
+        children: [
+          SizedBox(width: double.infinity, child: submitButton),
+          const SizedBox(height: 8),
+          cancelButton,
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(
-              color: AppColors.ink600,
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-            ),
-          ),
-        ),
+        cancelButton,
         const SizedBox(width: 24),
-        ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              final fullPhone = '$_countryCode${_phoneController.text}';
-              
-              final requestBody = {
-                "name": _nameController.text,
-                "phone": fullPhone,
-                "email": _emailController.text,
-                "rating": 5.0,
-                "skills": _selectedSkills.toList(),
-                "travelDistance": "0 km",
-                "estimatedEta": "0 mins"
-              };
-
-              // Show Loading
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(child: CircularProgressIndicator()),
-              );
-
-              try {
-                await context.read<DealerDashboardCubit>().addTechnician(requestBody);
-                
-                // Close loading
-                if (!mounted) return;
-                Navigator.pop(context);
-                
-                // Show Success
-                AwesomeDialog(
-                  context: context,
-                  dialogType: DialogType.success,
-                  animType: AnimType.bottomSlide,
-                  title: 'Success',
-                  desc: 'Field Technician added successfully.',
-                  btnOkOnPress: () {
-                    Navigator.pop(context);
-                  },
-                  width: 400,
-                ).show();
-              } catch (e) {
-                // Close loading
-                if (!mounted) return;
-                Navigator.pop(context);
-                
-                // Show Error
-                AwesomeDialog(
-                  context: context,
-                  dialogType: DialogType.error,
-                  animType: AnimType.bottomSlide,
-                  title: 'Error',
-                  desc: e.toString(),
-                  btnOkOnPress: () {},
-                  width: 400,
-                ).show();
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.navy900,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Add to Team',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
-          ),
-        ),
+        submitButton,
       ],
     );
   }

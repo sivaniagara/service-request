@@ -60,7 +60,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     );
   }
 
-  Future<void> loadReport({String timeframe = 'this_year'}) async {
+  Future<void> loadReport({String timeframe = '1Y'}) async {
     emit(state.copyWith(isLoading: true));
     final result = await repository.getReport(timeframe);
     result.fold(

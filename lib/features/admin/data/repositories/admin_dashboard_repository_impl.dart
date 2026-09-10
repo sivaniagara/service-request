@@ -10,8 +10,8 @@ abstract class AdminDashboardRepository {
   Future<AdminTicketModel> getAdminTickets();
   Future<AdminTicketDetailModel> getAdminTicketDetail(String ticketId);
   Future<AdminDealerModel> getAdminDealers();
-  Future<AdminReportSummaryModel> getReportSummary();
-  Future<AdminSlaComplianceModel> getSlaCompliance();
+  Future<AdminReportSummaryModel> getReportSummary({String timeframe = '30D', String? region});
+  Future<AdminSlaComplianceModel> getSlaCompliance({String timeframe = '30D'});
   Future<void> addDealer(Map<String, dynamic> data);
   Future<void> assignDealer(String ticketId, List<String> dealerIds, String instructions);
   Future<void> verifyCompletion(String ticketId, String notes);
@@ -45,13 +45,13 @@ class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
   }
 
   @override
-  Future<AdminReportSummaryModel> getReportSummary() async {
-    return await remoteDataSource.getReportSummary();
+  Future<AdminReportSummaryModel> getReportSummary({String timeframe = '30D', String? region}) async {
+    return await remoteDataSource.getReportSummary(timeframe: timeframe, region: region);
   }
 
   @override
-  Future<AdminSlaComplianceModel> getSlaCompliance() async {
-    return await remoteDataSource.getSlaCompliance();
+  Future<AdminSlaComplianceModel> getSlaCompliance({String timeframe = '30D'}) async {
+    return await remoteDataSource.getSlaCompliance(timeframe: timeframe);
   }
 
   @override

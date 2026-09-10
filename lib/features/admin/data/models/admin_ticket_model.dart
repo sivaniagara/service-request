@@ -28,6 +28,7 @@ class AdminDealerListItem {
   final String dealerId;
   final String dealerCode;
   final String name;
+  final String phone;
   final String region;
   final double rating;
   final int techniciansCount;
@@ -36,6 +37,7 @@ class AdminDealerListItem {
     required this.dealerId,
     required this.dealerCode,
     required this.name,
+    required this.phone,
     required this.region,
     required this.rating,
     required this.techniciansCount,
@@ -46,6 +48,7 @@ class AdminDealerListItem {
       dealerId: json['dealerId'] ?? '',
       dealerCode: json['dealerCode'] ?? '',
       name: json['name'] ?? '',
+      phone: json['phone'] ?? '',
       region: json['region'] ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       techniciansCount: json['techniciansCount'] ?? 0,

@@ -4,12 +4,17 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../customer/presentation/widgets/complaints/location_picker_dialog.dart';
 import '../../data/models/sub_dealer_model.dart';
 import '../bloc/dealer_dashboard_cubit.dart';
 
 class AddSubDealerDialog extends StatefulWidget {
-  const AddSubDealerDialog({super.key});
+  /// When true, renders as plain scrollable content for a full-screen
+  /// phone page instead of the fixed 680px [Dialog] used on desktop.
+  final bool isFullScreen;
+
+  const AddSubDealerDialog({super.key, this.isFullScreen = false});
 
   @override
   State<AddSubDealerDialog> createState() => _AddSubDealerDialogState();
@@ -22,7 +27,7 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
   final _emailController = TextEditingController();
   final _locationController = TextEditingController();
   final _managerController = TextEditingController();
-  
+
   String _countryCode = '+91';
   String _selectedRegion = 'Tamil Nadu (Coimbatore)';
   String _selectedStatus = 'Active';
@@ -39,6 +44,120 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final phoneField = _buildTextField(
+      'Contact Number*',
+      '9876543210',
+      _phoneController,
+      keyboardType: TextInputType.phone,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(10),
+      ],
+      validator: (v) => v!.isEmpty ? 'Required' : null,
+      prefixIcon: CountryCodePicker(
+        onChanged: (code) {
+          setState(() {
+            _countryCode = code.dialCode!;
+          });
+        },
+        initialSelection: 'IN',
+        favorite: const ['+91', 'IN'],
+        showCountryOnly: false,
+        showOnlyCountryWhenClosed: false,
+        alignLeft: false,
+        padding: EdgeInsets.zero,
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF14274E),
+        ),
+      ),
+    );
+    final emailField = _buildTextField(
+      'Email Address',
+      'branch@example.com',
+      _emailController,
+      keyboardType: TextInputType.emailAddress,
+    );
+    final regionField = _buildDropdownField(
+      'Region / State*',
+      ['Tamil Nadu (Coimbatore)', 'Kerala (Kochi)', 'Karnataka (Bengaluru)'],
+      _selectedRegion,
+          (val) => setState(() => _selectedRegion = val!),
+    );
+    final statusField = _buildDropdownField(
+      'Account Status',
+      ['Active', 'Under Review', 'Inactive'],
+      _selectedStatus,
+          (val) => setState(() => _selectedStatus = val!),
+    );
+
+    final formBody = Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!widget.isFullScreen) ...[
+            _buildHeader(context),
+            const SizedBox(height: 32),
+          ],
+          _buildTextField(
+            'Sub-Dealer Name*',
+            'e.g. Coimbatore South Hub',
+            _branchNameController,
+            validator: (v) => v!.isEmpty ? 'Required' : null,
+          ),
+          SizedBox(height: widget.isFullScreen ? 20 : 24),
+          if (widget.isFullScreen) ...[
+            phoneField,
+            const SizedBox(height: 20),
+            emailField,
+          ] else
+            Row(
+              children: [
+                Expanded(child: phoneField),
+                const SizedBox(width: 24),
+                Expanded(child: emailField),
+              ],
+            ),
+          SizedBox(height: widget.isFullScreen ? 20 : 24),
+          _buildTextField(
+            'Office Address / Location*',
+            'Select from map',
+            _locationController,
+            readOnly: true,
+            onTap: () async {
+              final result = await ResponsiveUtils.showLocationPicker(context, _locationController.text);
+              if (result != null) {
+                setState(() => _locationController.text = result);
+              }
+            },
+            validator: (v) => v!.isEmpty ? 'Required' : null,
+          ),
+          SizedBox(height: widget.isFullScreen ? 20 : 24),
+          if (widget.isFullScreen) ...[
+            regionField,
+            const SizedBox(height: 20),
+            statusField,
+          ] else
+            Row(
+              children: [
+                Expanded(child: regionField),
+                const SizedBox(width: 24),
+                Expanded(child: statusField),
+              ],
+            ),
+          SizedBox(height: widget.isFullScreen ? 28 : 48),
+          _buildFooter(context),
+        ],
+      ),
+    );
+
+    if (widget.isFullScreen) {
+      return formBody;
+    }
+
     return Dialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
@@ -46,115 +165,7 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
       child: Container(
         width: 680,
         padding: const EdgeInsets.all(32),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      'Sub-Dealer Name*',
-                      'e.g. Coimbatore South Hub',
-                      _branchNameController,
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      'Contact Number*',
-                      '9876543210',
-                      _phoneController,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
-                      ],
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                      prefixIcon: CountryCodePicker(
-                        onChanged: (code) {
-                          setState(() {
-                            _countryCode = code.dialCode!;
-                          });
-                        },
-                        initialSelection: 'IN',
-                        favorite: const ['+91', 'IN'],
-                        showCountryOnly: false,
-                        showOnlyCountryWhenClosed: false,
-                        alignLeft: false,
-                        padding: EdgeInsets.zero,
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF14274E),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: _buildTextField(
-                      'Email Address',
-                      'branch@example.com',
-                      _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                'Office Address / Location*',
-                'Select from map',
-                _locationController,
-                readOnly: true,
-                onTap: () async {
-                  final result = await showDialog<String>(
-                    context: context,
-                    builder: (context) => LocationPickerDialog(initialLocation: _locationController.text),
-                  );
-                  if (result != null) {
-                    setState(() => _locationController.text = result);
-                  }
-                },
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdownField(
-                      'Region / State*',
-                      ['Tamil Nadu (Coimbatore)', 'Kerala (Kochi)', 'Karnataka (Bengaluru)'],
-                      _selectedRegion,
-                      (val) => setState(() => _selectedRegion = val!),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: _buildDropdownField(
-                      'Account Status',
-                      ['Active', 'Under Review', 'Inactive'],
-                      _selectedStatus,
-                      (val) => setState(() => _selectedStatus = val!),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 48),
-              _buildFooter(context),
-            ],
-          ),
-        ),
+        child: formBody,
       ),
     );
   }
@@ -207,16 +218,16 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
   }
 
   Widget _buildTextField(
-    String label,
-    String hint,
-    TextEditingController controller, {
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    Widget? prefixIcon,
-    bool readOnly = false,
-    VoidCallback? onTap,
-    String? Function(String?)? validator,
-  }) {
+      String label,
+      String hint,
+      TextEditingController controller, {
+        TextInputType? keyboardType,
+        List<TextInputFormatter>? inputFormatters,
+        Widget? prefixIcon,
+        bool readOnly = false,
+        VoidCallback? onTap,
+        String? Function(String?)? validator,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -292,92 +303,107 @@ class _AddSubDealerDialogState extends State<AddSubDealerDialog> {
   }
 
   Widget _buildFooter(BuildContext context) {
+    final cancelButton = TextButton(
+      onPressed: () => Navigator.pop(context),
+      style: widget.isFullScreen ? TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)) : null,
+      child: const Text(
+        'Cancel',
+        style: TextStyle(color: Color(0xFF5B6478), fontWeight: FontWeight.w900, fontSize: 15),
+      ),
+    );
+
+    final submitButton = ElevatedButton(
+      onPressed: () async {
+        if (_formKey.currentState!.validate()) {
+          final fullPhone = '$_countryCode${_phoneController.text}';
+
+          final requestData = {
+            "name": _branchNameController.text,
+            "phone": fullPhone,
+            "email": _emailController.text,
+            "region": _selectedRegion,
+            "dealerCode": 'DC-${DateTime.now().millisecond}',
+            "territoryZones": [_selectedRegion],
+            "officeAddress": _locationController.text,
+            "maxConcurrentTickets": 5,
+            "rating": 0,
+          };
+
+          // Show Loading
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const Center(child: CircularProgressIndicator()),
+          );
+
+          try {
+            await context.read<DealerDashboardCubit>().addSubDealer(requestData);
+
+            // Close loading
+            if (mounted) Navigator.pop(context);
+
+            // Show Success
+            if (mounted) {
+              AwesomeDialog(
+                context: context,
+                dialogType: DialogType.success,
+                animType: AnimType.bottomSlide,
+                title: 'Success',
+                desc: 'Branch account created successfully.',
+                btnOkOnPress: () {
+                  Navigator.pop(context);
+                },
+                width: 400,
+              ).show();
+            }
+          } catch (e) {
+            // Close loading
+            if (mounted) Navigator.pop(context);
+
+            // Show Error
+            if (mounted) {
+              AwesomeDialog(
+                context: context,
+                dialogType: DialogType.error,
+                animType: AnimType.bottomSlide,
+                title: 'Error',
+                desc: e.toString(),
+                btnOkOnPress: () {},
+                width: 400,
+              ).show();
+            }
+          }
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF14274E),
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: widget.isFullScreen ? 0 : 32, vertical: widget.isFullScreen ? 18 : 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+      ),
+      child: const Text(
+        'Create Branch Account',
+        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+      ),
+    );
+
+    if (widget.isFullScreen) {
+      return Column(
+        children: [
+          SizedBox(width: double.infinity, child: submitButton),
+          const SizedBox(height: 8),
+          cancelButton,
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Color(0xFF5B6478), fontWeight: FontWeight.w900, fontSize: 15),
-          ),
-        ),
+        cancelButton,
         const SizedBox(width: 24),
-        ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              final fullPhone = '$_countryCode${_phoneController.text}';
-              
-              final requestData = {
-                "name": _branchNameController.text,
-                "phone": fullPhone,
-                "email": _emailController.text,
-                "region": _selectedRegion,
-                "dealerCode": 'DC-${DateTime.now().millisecond}',
-                "territoryZones": [_selectedRegion],
-                "officeAddress": _locationController.text,
-                "maxConcurrentTickets": 5,
-                "rating": 0,
-              };
-
-              // Show Loading
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(child: CircularProgressIndicator()),
-              );
-
-              try {
-                await context.read<DealerDashboardCubit>().addSubDealer(requestData);
-                
-                // Close loading
-                if (mounted) Navigator.pop(context);
-                
-                // Show Success
-                if (mounted) {
-                  AwesomeDialog(
-                    context: context,
-                    dialogType: DialogType.success,
-                    animType: AnimType.bottomSlide,
-                    title: 'Success',
-                    desc: 'Branch account created successfully.',
-                    btnOkOnPress: () {
-                      Navigator.pop(context);
-                    },
-                    width: 400,
-                  ).show();
-                }
-              } catch (e) {
-                // Close loading
-                if (mounted) Navigator.pop(context);
-                
-                // Show Error
-                if (mounted) {
-                  AwesomeDialog(
-                    context: context,
-                    dialogType: DialogType.error,
-                    animType: AnimType.bottomSlide,
-                    title: 'Error',
-                    desc: e.toString(),
-                    btnOkOnPress: () {},
-                    width: 400,
-                  ).show();
-                }
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF14274E),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Create Branch Account',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
-          ),
-        ),
+        submitButton,
       ],
     );
   }

@@ -31,20 +31,30 @@ class ServiceHandlerInfo extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.orange100.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(10),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.orange100.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.business_outlined, size: 18, color: AppColors.orange500),
                     ),
-                    child: const Icon(Icons.business_outlined, size: 18, color: AppColors.orange500),
-                  ),
-                  const SizedBox(width: 12),
-                  Text('Service Handler (Dealer) & Field Technicians', style: textTheme.titleMedium?.copyWith(fontSize: 14)),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Service Handler (Dealer) & Field Technicians',
+                        style: textTheme.titleMedium?.copyWith(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -202,8 +212,14 @@ class _DealerCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(dealer.name, style: textTheme.titleMedium?.copyWith(fontSize: 14)),
-                    const Spacer(),
+                    Expanded(
+                      child: Text(
+                        dealer.name,
+                        style: textTheme.titleMedium?.copyWith(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
@@ -306,8 +322,14 @@ class _TechnicianCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(tech.name, style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900, fontSize: 12)),
-                    const Spacer(),
+                    Expanded(
+                      child: Text(
+                        tech.name,
+                        style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900, fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     if (tech.status != null)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

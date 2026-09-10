@@ -71,6 +71,7 @@ class DealerData {
   final String dealerId;
   final String dealerCode;
   final String name;
+  final String phone;
   final String region;
   final List<dynamic> territoryZones;
   final String officeAddress;
@@ -82,6 +83,7 @@ class DealerData {
     required this.dealerId,
     required this.dealerCode,
     required this.name,
+    required this.phone,
     required this.region,
     required this.territoryZones,
     required this.officeAddress,
@@ -95,6 +97,7 @@ class DealerData {
       dealerId: json['dealerId'],
       dealerCode: json['dealerCode'],
       name: json['name'],
+      phone: json['phone'] ?? '',
       region: json['region'],
       territoryZones: json['territoryZones'] ?? [],
       officeAddress: json['officeAddress'],

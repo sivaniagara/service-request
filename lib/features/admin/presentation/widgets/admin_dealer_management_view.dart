@@ -202,7 +202,7 @@ class AdminDealerManagementView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Code: ${dealer.dealerCode}',
+                        dealer.phone,
                         style: const TextStyle(color: AppColors.ink400, fontSize: 11),
                       ),
                     ],

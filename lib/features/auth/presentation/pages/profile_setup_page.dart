@@ -6,6 +6,7 @@ import '../../../../core/network/token_manager.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../injection_container.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../customer/presentation/widgets/complaints/location_picker_dialog.dart';
 import '../widgets/auth_layout.dart';
 import '../bloc/auth_cubit.dart';
@@ -40,7 +41,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       context: context,
       dialogType: DialogType.noHeader,
       animType: AnimType.scale,
-      width: 400,
+      width: MediaQuery.of(context).size.width > 600 ? 400 : null,
       body: const Padding(
         padding: EdgeInsets.all(20.0),
         child: Column(
@@ -85,7 +86,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             context: context,
             dialogType: DialogType.success,
             animType: AnimType.bottomSlide,
-            width: 400,
+            width: MediaQuery.of(context).size.width > 600 ? 400 : null,
             title: 'Profile Updated',
             desc: 'Welcome to the platform! Your profile is now complete.',
             btnOkOnPress: () {
@@ -108,7 +109,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             context: context,
             dialogType: DialogType.error,
             animType: AnimType.bottomSlide,
-            width: 400,
+            width: MediaQuery.of(context).size.width > 600 ? 400 : null,
             title: 'Error',
             desc: state.message,
             btnOkOnPress: () {},
@@ -127,7 +128,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
               context: context,
               dialogType: DialogType.warning,
               animType: AnimType.bottomSlide,
-              width: 450,
+              width: MediaQuery.of(context).size.width > 600 ? 450 : null,
               title: 'Return to Login?',
               desc: 'Are you sure you want to go back? You will need to login again.',
               btnCancelOnPress: () {},
@@ -213,10 +214,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   controller: _addressController,
                   readOnly: true,
                   onTap: () async {
-                    final result = await showDialog<String>(
-                      context: context,
-                      builder: (context) => LocationPickerDialog(initialLocation: _addressController.text),
-                    );
+                    final result = await ResponsiveUtils.showLocationPicker(context, _addressController.text);
                     if (result != null) {
                       setState(() => _addressController.text = result);
                     }
@@ -285,7 +283,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                             AwesomeDialog(
                               context: context,
                               dialogType: DialogType.warning,
-                              width: 400,
+                              width: MediaQuery.of(context).size.width > 600 ? 400 : null,
                               title: 'Required Fields',
                               desc: 'Please fill in your name and email.',
                               btnOkOnPress: () {},

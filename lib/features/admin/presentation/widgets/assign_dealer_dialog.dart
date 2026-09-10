@@ -10,7 +10,12 @@ import '../bloc/admin_dashboard_state.dart';
 class AssignDealerDialog extends StatefulWidget {
   final AdminTicketDetailData ticket;
 
-  const AssignDealerDialog({super.key, required this.ticket});
+  /// When true, renders as plain scrollable content for a full-screen
+  /// phone page instead of the fixed 700px-wide [Dialog] the desktop
+  /// version uses.
+  final bool isFullScreen;
+
+  const AssignDealerDialog({super.key, required this.ticket, this.isFullScreen = false});
 
   @override
   State<AssignDealerDialog> createState() => _AssignDealerDialogState();
@@ -27,6 +32,12 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
     for (var dealer in widget.ticket.assignedDealer) {
       _selectedDealerIds.add(dealer.dealerId);
     }
+
+    // Ensure dealer list from /api/admin/tickets is available for assignment
+    final cubit = context.read<AdminDashboardCubit>();
+    if (cubit.state.dealerList == null || cubit.state.dealerList!.isEmpty) {
+      cubit.loadTickets();
+    }
   }
 
   @override
@@ -40,6 +51,38 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
     return BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
       builder: (context, state) {
         final dealers = state.dealerList ?? [];
+
+        final content = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTicketInfoCard(),
+            const SizedBox(height: 24),
+            _buildDealerSelectionHeader(),
+            const SizedBox(height: 12),
+            ...dealers.map((dealer) => Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: _buildDealerItem(dealer),
+            )),
+            const SizedBox(height: 24),
+            _buildInstructionsField(),
+            const SizedBox(height: 20),
+            _buildSyncInfoBox(),
+          ],
+        );
+
+        if (widget.isFullScreen) {
+          // Page supplies the AppBar; footer stays at the end of the
+          // scroll rather than a fixed bar, matching the pattern used
+          // for the other full-screen forms in this app.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              content,
+              const SizedBox(height: 28),
+              _buildFooter(context),
+            ],
+          );
+        }
 
         return Dialog(
           backgroundColor: Colors.white,
@@ -58,31 +101,15 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
                   child: _buildHeader(context),
                 ),
                 const Divider(height: 1, color: Color(0xFFEDF0F6)),
-                
+
                 // Scrollable Content
                 Flexible(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTicketInfoCard(),
-                        const SizedBox(height: 24),
-                        _buildDealerSelectionHeader(),
-                        const SizedBox(height: 12),
-                        ...dealers.map((dealer) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10.0),
-                          child: _buildDealerItem(dealer),
-                        )),
-                        const SizedBox(height: 24),
-                        _buildInstructionsField(),
-                        const SizedBox(height: 20),
-                        _buildSyncInfoBox(),
-                      ],
-                    ),
+                    child: content,
                   ),
                 ),
-                
+
                 const Divider(height: 1, color: Color(0xFFEDF0F6)),
                 // Fixed Footer
                 Padding(
@@ -150,6 +177,12 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
   }
 
   Widget _buildTicketInfoCard() {
+    final priorityItem = _buildInfoItem(
+      'PRIORITY',
+      widget.ticket.priority,
+      valueColor: _getPriorityColor(widget.ticket.priority),
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -157,7 +190,22 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFEDF0F6)),
       ),
-      child: Row(
+      child: widget.isFullScreen
+          ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoItem('ISSUE TITLE', widget.ticket.title),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(child: _buildInfoItem('LOCATION', widget.ticket.customer.siteLocation)),
+              const SizedBox(width: 16),
+              priorityItem,
+            ],
+          ),
+        ],
+      )
+          : Row(
         children: [
           Expanded(
             flex: 3,
@@ -169,11 +217,7 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
             child: _buildInfoItem('LOCATION', widget.ticket.customer.siteLocation),
           ),
           const SizedBox(width: 24),
-          _buildInfoItem(
-            'PRIORITY',
-            widget.ticket.priority,
-            valueColor: _getPriorityColor(widget.ticket.priority),
-          ),
+          priorityItem,
         ],
       ),
     );
@@ -440,55 +484,55 @@ class _AssignDealerDialogState extends State<AssignDealerDialog> {
             onPressed: _selectedDealerIds.isEmpty
                 ? null
                 : () async {
-                    // Show Loading
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const Center(child: CircularProgressIndicator()),
-                    );
+              // Show Loading
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(child: CircularProgressIndicator()),
+              );
 
-                    try {
-                      await context.read<AdminDashboardCubit>().assignDealer(
-                            widget.ticket.ticketId,
-                            _selectedDealerIds.toList(),
-                            _instructionsController.text,
-                          );
+              try {
+                await context.read<AdminDashboardCubit>().assignDealer(
+                  widget.ticket.ticketId,
+                  _selectedDealerIds.toList(),
+                  _instructionsController.text,
+                );
 
-                      // Close loading
-                      if (context.mounted) Navigator.pop(context);
-                      
-                      // Show Success and close dialog
-                      if (context.mounted) {
-                        AwesomeDialog(
-                          context: context,
-                          dialogType: DialogType.success,
-                          animType: AnimType.bottomSlide,
-                          title: 'Assignment Successful',
-                          desc: 'The ticket has been successfully assigned to the selected dealers.',
-                          btnOkOnPress: () {
-                            Navigator.pop(context); // Close AssignDealerDialog
-                          },
-                          width: 400,
-                        ).show();
-                      }
-                    } catch (e) {
-                      // Close loading
-                      if (context.mounted) Navigator.pop(context);
+                // Close loading
+                if (context.mounted) Navigator.pop(context);
 
-                      // Show Error
-                      if (context.mounted) {
-                        AwesomeDialog(
-                          context: context,
-                          dialogType: DialogType.error,
-                          animType: AnimType.bottomSlide,
-                          title: 'Assignment Failed',
-                          desc: e.toString(),
-                          btnOkOnPress: () {},
-                          width: 400,
-                        ).show();
-                      }
-                    }
-                  },
+                // Show Success and close dialog
+                if (context.mounted) {
+                  AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.success,
+                    animType: AnimType.bottomSlide,
+                    title: 'Assignment Successful',
+                    desc: 'The ticket has been successfully assigned to the selected dealers.',
+                    btnOkOnPress: () {
+                      Navigator.pop(context); // Close AssignDealerDialog
+                    },
+                    width: 400,
+                  ).show();
+                }
+              } catch (e) {
+                // Close loading
+                if (context.mounted) Navigator.pop(context);
+
+                // Show Error
+                if (context.mounted) {
+                  AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.error,
+                    animType: AnimType.bottomSlide,
+                    title: 'Assignment Failed',
+                    desc: e.toString(),
+                    btnOkOnPress: () {},
+                    width: 400,
+                  ).show();
+                }
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF7C6CF0),
               foregroundColor: Colors.white,

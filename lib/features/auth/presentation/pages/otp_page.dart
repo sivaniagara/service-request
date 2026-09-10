@@ -31,7 +31,7 @@ class _OtpPageState extends State<OtpPage> {
       context: context,
       dialogType: DialogType.noHeader,
       animType: AnimType.scale,
-      width: 400,
+      width: MediaQuery.of(context).size.width > 600 ? 400 : null,
       body: const Padding(
         padding: EdgeInsets.all(20.0),
         child: Column(
@@ -67,7 +67,7 @@ class _OtpPageState extends State<OtpPage> {
             context: context,
             dialogType: DialogType.success,
             animType: AnimType.bottomSlide,
-            width: 400,
+            width: MediaQuery.of(context).size.width > 600 ? 400 : null,
             title: 'Verified',
             desc: 'Your mobile number has been verified successfully.',
             btnOkOnPress: () {
@@ -97,7 +97,7 @@ class _OtpPageState extends State<OtpPage> {
             context: context,
             dialogType: DialogType.error,
             animType: AnimType.bottomSlide,
-            width: 400,
+            width: MediaQuery.of(context).size.width > 600 ? 400 : null,
             title: 'Error',
             desc: state.message,
             btnOkOnPress: () {},
@@ -156,7 +156,7 @@ class _OtpPageState extends State<OtpPage> {
                           AwesomeDialog(
                             context: context,
                             dialogType: DialogType.warning,
-                            width: 400,
+                            width: MediaQuery.of(context).size.width > 600 ? 400 : null,
                             title: 'Invalid Input',
                             desc: 'Please enter a 6-digit OTP code.',
                             btnOkOnPress: () {},

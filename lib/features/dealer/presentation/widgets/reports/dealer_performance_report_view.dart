@@ -36,19 +36,36 @@ class DealerPerformanceReportView extends StatelessWidget {
                 const SizedBox(height: 24),
                 const Divider(height: 1, color: AppColors.line),
                 const SizedBox(height: 24),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: CategoryBreakdownSection(breakdown: report.categoryBreakdown),
-                    ),
-                    const SizedBox(width: 32),
-                    Expanded(
-                      flex: 1,
-                      child: StatusBreakdownDonutSection(breakdown: report.statusBreakdown),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Side-by-side breakdown cards need real width for
+                    // both the category bars and the SLA donut's legend
+                    // to stay legible — stack them below ~600px instead.
+                    if (constraints.maxWidth < 600) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CategoryBreakdownSection(breakdown: report.categoryBreakdown),
+                          const SizedBox(height: 28),
+                          StatusBreakdownDonutSection(breakdown: report.statusBreakdown),
+                        ],
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: CategoryBreakdownSection(breakdown: report.categoryBreakdown),
+                        ),
+                        const SizedBox(width: 32),
+                        Expanded(
+                          flex: 1,
+                          child: StatusBreakdownDonutSection(breakdown: report.statusBreakdown),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
