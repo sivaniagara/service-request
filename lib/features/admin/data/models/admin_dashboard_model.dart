@@ -48,7 +48,7 @@ class SummaryMetrics {
   final int activeDealersCount;
   final int activeFieldTechnicians;
   final String slaComplianceRate;
-  final int avgFirstResponseMinutes;
+  final double avgFirstResponseMinutes;
 
   SummaryMetrics({
     required this.totalTickets,

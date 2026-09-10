@@ -10,8 +10,6 @@ abstract class TechnicianRepository {
   Future<TechnicianReportData> getTechnicianReports();
   Future<List<TechnicianHistoryItem>> getTechnicianHistory();
   Future<void> updateSupportMode(String ticketId, String supportMode);
-  Future<void> updateTicketStatus(String ticketId, String status, String supportMode);
-  Future<void> resolveTicket(String ticketId, String notes, List<String> photos);
   Future<Map<String, dynamic>> completeTechnicianTask(String ticketId, String notes);
 }
 
@@ -48,16 +46,6 @@ class TechnicianRepositoryImpl implements TechnicianRepository {
   @override
   Future<void> updateSupportMode(String ticketId, String supportMode) async {
     await remoteDataSource.updateSupportMode(ticketId, supportMode);
-  }
-
-  @override
-  Future<void> updateTicketStatus(String ticketId, String status, String supportMode) async {
-    await remoteDataSource.updateTicketStatus(ticketId, status, supportMode);
-  }
-
-  @override
-  Future<void> resolveTicket(String ticketId, String notes, List<String> photos) async {
-    await remoteDataSource.resolveTicket(ticketId, notes, photos);
   }
 
   @override

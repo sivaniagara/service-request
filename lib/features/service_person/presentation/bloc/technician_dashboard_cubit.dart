@@ -26,7 +26,8 @@ class TechnicianDashboardCubit extends Cubit<TechnicianDashboardState> {
     try {
       final tickets = await repository.getTechnicianTickets();
       emit(state.copyWith(isTicketsLoading: false, tickets: tickets));
-      if (tickets.isNotEmpty) {
+      // Only load first ticket detail if no ticket is currently selected
+      if (tickets.isNotEmpty && state.selectedTicketDetail == null) {
         loadTicketDetail(tickets.first.ticketId);
       }
     } catch (e, stackTrace) {
@@ -37,7 +38,12 @@ class TechnicianDashboardCubit extends Cubit<TechnicianDashboardState> {
   }
 
   Future<void> loadTicketDetail(String ticketId) async {
-    emit(state.copyWith(isDetailLoading: true, error: null));
+    // Only set loading if we are switching to a DIFFERENT ticket
+    final isNewTicket = state.selectedTicketDetail == null || state.selectedTicketDetail!.ticketId != ticketId;
+    if (isNewTicket) {
+      emit(state.copyWith(isDetailLoading: true, error: null));
+    }
+    
     try {
       final detail = await repository.getTechnicianTicketDetail(ticketId);
       emit(state.copyWith(isDetailLoading: false, selectedTicketDetail: detail));
@@ -69,8 +75,12 @@ class TechnicianDashboardCubit extends Cubit<TechnicianDashboardState> {
     emit(state.copyWith(isDetailLoading: true, error: null));
     try {
       await repository.updateSupportMode(ticketId, supportMode);
-      // Refresh details after update
-      await loadTicketDetail(ticketId);
+      // Refresh all relevant data
+      await Future.wait([
+        loadTicketDetail(ticketId),
+        loadTickets(),
+        loadDashboard(),
+      ]);
       return true;
     } catch (e) {
       debugPrint("updateSupportMode error: $e");
@@ -79,45 +89,23 @@ class TechnicianDashboardCubit extends Cubit<TechnicianDashboardState> {
     }
   }
 
-  Future<bool> updateTicketStatus(String ticketId, String status, String supportMode) async {
-    emit(state.copyWith(isDetailLoading: true, error: null));
-    try {
-      await repository.updateTicketStatus(ticketId, status, supportMode);
-      await loadTicketDetail(ticketId);
-      return true;
-    } catch (e) {
-      debugPrint("updateTicketStatus error: $e");
-      emit(state.copyWith(isDetailLoading: false, error: e.toString()));
-      return false;
-    }
-  }
-
-  Future<bool> resolveTicket(String ticketId, String notes, List<String> photos) async {
-    emit(state.copyWith(isDetailLoading: true, error: null));
-    try {
-      await repository.resolveTicket(ticketId, notes, photos);
-      await loadTicketDetail(ticketId);
-      // Also refresh tickets list if needed
-      await loadTickets();
-      return true;
-    } catch (e) {
-      debugPrint("resolveTicket error: $e");
-      emit(state.copyWith(isDetailLoading: false, error: e.toString()));
-      return false;
-    }
-  }
-
-  Future<bool> completeTechnicianTask(String ticketId, String notes) async {
+  Future<Map<String, dynamic>?> completeTechnicianTask(String ticketId, String notes) async {
+    debugPrint("completeTechnicianTask...");
     emit(state.copyWith(isSubmitting: true, error: null));
     try {
-      await repository.completeTechnicianTask(ticketId, notes);
-      await loadTicketDetail(ticketId);
+      final response = await repository.completeTechnicianTask(ticketId, notes);
+      // Refresh all relevant data
+      await Future.wait([
+        loadTicketDetail(ticketId),
+        loadTickets(),
+        loadDashboard(),
+      ]);
       emit(state.copyWith(isSubmitting: false));
-      return true;
+      return response;
     } catch (e) {
       debugPrint("completeTechnicianTask error: $e");
       emit(state.copyWith(isSubmitting: false, error: e.toString()));
-      return false;
+      return null;
     }
   }
 

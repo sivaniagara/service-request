@@ -24,45 +24,7 @@ class TechnicianDashboardPage extends StatefulWidget {
 class _TechnicianDashboardPageState extends State<TechnicianDashboardPage> {
   String _targetTicketId = '';
 
-  void _handleStatusUpdate(String id, String status, {String? notes, List<String>? photos}) {
-    AwesomeDialog(
-      context: context,
-      dialogType: status == 'Closed' ? DialogType.warning : DialogType.question,
-      animType: AnimType.bottomSlide,
-      title: status == 'Closed' ? 'Resolve Ticket' : 'Update Status',
-      desc: status == 'Closed'
-          ? 'Are you sure you want to mark this ticket as resolved?'
-          : 'Do you want to change status to $status?',
-      btnCancelOnPress: () {},
-      btnOkOnPress: () async {
-        final cubit = context.read<TechnicianDashboardCubit>();
-        final detail = cubit.state.selectedTicketDetail;
-        if (detail == null) return;
-
-        bool success = false;
-        if (status == 'Closed') {
-          success = await cubit.resolveTicket(id, notes ?? "Resolved", photos ?? []);
-        } else {
-          success = await cubit.updateTicketStatus(id, status, detail.supportMode!);
-        }
-
-        if (success && mounted) {
-          AwesomeDialog(
-            context: context,
-            dialogType: DialogType.success,
-            animType: AnimType.bottomSlide,
-            title: 'Success',
-            desc: status == 'Closed' ? 'Ticket resolved successfully' : 'Status updated to $status',
-            btnOkOnPress: () {},
-            width: 400,
-          ).show();
-        }
-      },
-      width: 400,
-    ).show();
-  }
-
-  void _handleSupportModeChange(String id, String mode) {
+  void _handleSupportModeChange(BuildContext context, String id, String mode) {
     AwesomeDialog(
       context: context,
       dialogType: DialogType.question,
@@ -73,7 +35,7 @@ class _TechnicianDashboardPageState extends State<TechnicianDashboardPage> {
       btnOkOnPress: () async {
         final cubit = context.read<TechnicianDashboardCubit>();
         final success = await cubit.updateSupportMode(id, mode);
-        if (success && mounted) {
+        if (success && context.mounted) {
           AwesomeDialog(
             context: context,
             dialogType: DialogType.success,
@@ -89,7 +51,7 @@ class _TechnicianDashboardPageState extends State<TechnicianDashboardPage> {
     ).show();
   }
 
-  void _handleTaskComplete(String id) {
+  void _handleTaskComplete(BuildContext context, String id) {
     final notesController = TextEditingController();
     AwesomeDialog(
       context: context,
@@ -137,19 +99,24 @@ class _TechnicianDashboardPageState extends State<TechnicianDashboardPage> {
         loadingDialog.show();
 
         final cubit = context.read<TechnicianDashboardCubit>();
-        final success = await cubit.completeTechnicianTask(id, notesController.text);
+        final result = await cubit.completeTechnicianTask(id, notesController.text);
 
         if (context.mounted) {
           Navigator.of(context).pop(); // Dismiss loading dialog
         }
 
-        if (success && mounted) {
+        if (result != null && context.mounted) {
+          final bool isAllCompleted = result['allTechniciansCompleted'] == true;
+          final String ticketStatus = result['ticketStatus'] ?? '';
+
           AwesomeDialog(
             context: context,
             dialogType: DialogType.success,
             animType: AnimType.bottomSlide,
-            title: 'Task Completed',
-            desc: 'Your portion of the ticket has been marked as complete.',
+            title: isAllCompleted ? 'Ticket Progressed' : 'Task Completed',
+            desc: isAllCompleted
+                ? 'All technicians have finished. Ticket is now $ticketStatus.'
+                : 'Your portion of the ticket has been marked as complete.',
             btnOkOnPress: () {},
             width: 400,
           ).show();
@@ -182,9 +149,8 @@ class _TechnicianDashboardPageState extends State<TechnicianDashboardPage> {
           builder: (context, constraints) {
             if (constraints.maxWidth < 900) {
               return TechnicianMobileDashboard(
-                onStatusUpdate: _handleStatusUpdate,
-                onSupportModeChange: _handleSupportModeChange,
-                onTaskComplete: _handleTaskComplete,
+                onSupportModeChange: (id, mode) => _handleSupportModeChange(context, id, mode),
+                onTaskComplete: (id) => _handleTaskComplete(context, id),
               );
             }
             return Scaffold(
@@ -265,9 +231,8 @@ class _TechnicianDashboardPageState extends State<TechnicianDashboardPage> {
         return TechnicianServiceRequestsView(
           tickets: state.tickets ?? [],
           initialTicketId: _targetTicketId,
-          onStatusUpdate: _handleStatusUpdate,
-          onSupportModeChange: _handleSupportModeChange,
-          onTaskComplete: _handleTaskComplete,
+          onSupportModeChange: (id, mode) => _handleSupportModeChange(context, id, mode),
+          onTaskComplete: (id) => _handleTaskComplete(context, id),
         );
       case TechnicianDashboardTab.reports:
         if (state.reportData == null) {

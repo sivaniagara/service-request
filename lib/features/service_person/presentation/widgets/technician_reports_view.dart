@@ -18,119 +18,192 @@ class TechnicianReportsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 24),
-          _buildKPIsRow(),
-          const SizedBox(height: 24),
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 700;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 1, child: _buildServiceCategories()),
-              const SizedBox(width: 24),
-              Expanded(flex: 1, child: _buildCustomerFeedback()),
+              _buildHeader(isNarrow),
+              const SizedBox(height: 24),
+              _buildKPIsRow(isNarrow),
+              const SizedBox(height: 24),
+              if (isNarrow)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildServiceCategories(),
+                    const SizedBox(height: 24),
+                    _buildCustomerFeedback(),
+                  ],
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 1, child: _buildServiceCategories()),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 1, child: _buildCustomerFeedback()),
+                  ],
+                ),
+              const SizedBox(height: 24),
+              isNarrow ? _buildHistoryCards() : _buildHistoryTable(),
             ],
           ),
-          const SizedBox(height: 24),
-          _buildHistoryTable(),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isNarrow) {
+    final titleBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Field Technician Performance & Reports',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navy900),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Verified work history and benchmarks for ${reportData.technician.name}.',
+          style: const TextStyle(fontSize: 12.5, color: AppColors.ink600),
+        ),
+      ],
+    );
+
+    final filterChips = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: const [
+          FilterChipItem(label: 'This Month', isActive: true),
+          FilterChipItem(label: 'Last Month'),
+          FilterChipItem(label: 'Q3 2026'),
+        ],
+      ),
+    );
+
+    final actionButtons = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () {},
+          icon: const Icon(Icons.download_outlined, size: 16),
+          label: const Text('CSV', style: TextStyle(fontSize: 12)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.navy900,
+            side: const BorderSide(color: AppColors.line),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: () {},
+          icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+          label: const Text('PDF', style: TextStyle(fontSize: 12)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.navy900,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+        ),
+      ],
+    );
+
+    if (isNarrow) {
+      // Title + filter chips + two action buttons all in one Row
+      // overflow well before phone width — stack them instead.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleBlock,
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(child: filterChips),
+              const SizedBox(width: 10),
+              actionButtons,
+            ],
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Field Technician Performance & Reports',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.navy900),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Verified work history and benchmarks for ${reportData.technician.name}.',
-              style: const TextStyle(fontSize: 13, color: AppColors.ink600),
-            ),
-          ],
-        ),
+        Expanded(child: titleBlock),
         Row(
           children: [
-            FilterChipItem(label: 'This Month', isActive: true),
-            FilterChipItem(label: 'Last Month'),
-            FilterChipItem(label: 'Q3 2026'),
+            filterChips,
             const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.download_outlined, size: 16),
-              label: const Text('CSV', style: TextStyle(fontSize: 12)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.navy900,
-                side: const BorderSide(color: AppColors.line),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
-              label: const Text('Summary PDF', style: TextStyle(fontSize: 12)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.navy900,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-            ),
+            actionButtons,
           ],
         ),
       ],
     );
   }
 
-  Widget _buildKPIsRow() {
+  Widget _buildKPIsRow(bool isNarrow) {
+    final cards = [
+      KPICard(
+        title: 'Total Resolved',
+        value: reportData.kpis.totalJobsResolved.toString(),
+        subtitle: '↗ +14% vs prev.',
+        subtitleColor: AppColors.green500,
+      ),
+      KPICard(
+        title: 'Avg. Turnaround',
+        value: '${reportData.kpis.averageResolutionTimeHours} hrs',
+        subtitle: 'Faster than target',
+        subtitleColor: AppColors.green500,
+      ),
+      KPICard(
+        title: 'CSAT Score',
+        value: reportData.kpis.averageRating.toString(),
+        subtitle: 'Based on ${reportData.kpis.totalReviewsCount} surveys',
+        showStar: true,
+      ),
+      KPICard(
+        title: 'First-Visit Resolution',
+        value: '${reportData.kpis.firstTimeFixRatePercentage}%',
+        subtitle: 'Benchmark: 82%',
+        subtitleColor: AppColors.purple500,
+      ),
+    ];
+
+    if (isNarrow) {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[1]),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: cards[2]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[3]),
+            ],
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
-        Expanded(
-          child: KPICard(
-            title: 'Total Resolved',
-            value: reportData.kpis.totalJobsResolved.toString(),
-            subtitle: '↗ +14% vs prev.',
-            subtitleColor: AppColors.green500,
-          ),
-        ),
+        Expanded(child: cards[0]),
         const SizedBox(width: 16),
-        Expanded(
-          child: KPICard(
-            title: 'Avg. Turnaround',
-            value: '${reportData.kpis.averageResolutionTimeHours} hrs',
-            subtitle: 'Faster than target',
-            subtitleColor: AppColors.green500,
-          ),
-        ),
+        Expanded(child: cards[1]),
         const SizedBox(width: 16),
-        Expanded(
-          child: KPICard(
-            title: 'CSAT Score',
-            value: reportData.kpis.averageRating.toString(),
-            subtitle: 'Based on ${reportData.kpis.totalReviewsCount} surveys',
-            showStar: true,
-          ),
-        ),
+        Expanded(child: cards[2]),
         const SizedBox(width: 16),
-        Expanded(
-          child: KPICard(
-            title: 'First-Visit Resolution',
-            value: '${reportData.kpis.firstTimeFixRatePercentage}%',
-            subtitle: 'Benchmark: 82%',
-            subtitleColor: AppColors.purple500,
-          ),
-        ),
+        Expanded(child: cards[3]),
       ],
     );
   }
@@ -223,6 +296,89 @@ class TechnicianReportsView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text('Ticket #${item.ticketNumber}', style: const TextStyle(fontSize: 10, color: AppColors.ink400)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryCards() {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Work Order History', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.navy900)),
+          const SizedBox(height: 16),
+          if (history.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text('No completed work orders yet.', style: TextStyle(color: AppColors.ink400, fontSize: 12)),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: history.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) => _buildHistoryCard(history[index]),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(TechnicianHistoryItem item) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.bg.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '#${item.ticketNumber}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: AppColors.navy900),
+                ),
+              ),
+              StatusPill.ticketStatus(item.status),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(item.product, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.navy900)),
+          const SizedBox(height: 4),
+          Text(
+            item.customerName,
+            style: const TextStyle(fontSize: 11.5, color: AppColors.ink600, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            item.siteLocation,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 10.5, color: AppColors.ink400),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(6)),
+                child: Text(
+                  item.supportMode.toUpperCase(),
+                  style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: AppColors.ink600),
+                ),
+              ),
+              const Spacer(),
+              Text(item.rating.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const Icon(Icons.star, size: 12, color: Colors.orange),
+            ],
+          ),
         ],
       ),
     );

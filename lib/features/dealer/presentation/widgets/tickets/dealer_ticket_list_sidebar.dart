@@ -81,85 +81,272 @@ class DealerTicketListSidebar extends StatelessWidget {
     );
   }
 
+  Color _priorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'critical':
+        return const Color(0xFFE5484D);
+      case 'high':
+        return const Color(0xFFF5A524);
+      case 'medium':
+        return const Color(0xFF3B82F6);
+      case 'low':
+        return const Color(0xFF64748B);
+      default:
+        return AppColors.ink400;
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toLowerCase().trim()) {
+      case 'in progress':
+        return const Color(0xFF2563EB);
+      case 'assigned':
+      case 'assigned to technician':
+      case 'assigned to dealer':
+      case 'assigned to handler':
+        return const Color(0xFF7C3AED);
+      case 'pending assignment':
+      case 'pending':
+        return const Color(0xFFF59E0B);
+      case 'submitted':
+        return const Color(0xFF0891B2);
+      case 'resolved':
+      case 'completed':
+      case 'closed':
+        return const Color(0xFF16A34A);
+      case 'customer raised complaint':
+      case 'open':
+        return const Color(0xFFDC2626);
+      case 'cancelled':
+        return const Color(0xFF64748B);
+      default:
+        return AppColors.ink400;
+    }
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status.toLowerCase().trim()) {
+      case 'in progress':
+        return Icons.autorenew_rounded;
+      case 'assigned':
+      case 'assigned to technician':
+      case 'assigned to dealer':
+      case 'assigned to handler':
+        return Icons.person_add_alt_1_rounded;
+      case 'pending assignment':
+      case 'pending':
+        return Icons.schedule_rounded;
+      case 'submitted':
+        return Icons.upload_rounded;
+      case 'resolved':
+      case 'completed':
+      case 'closed':
+        return Icons.check_circle_outline_rounded;
+      case 'customer raised complaint':
+      case 'open':
+        return Icons.error_outline_rounded;
+      case 'cancelled':
+        return Icons.close_rounded;
+      default:
+        return Icons.circle_outlined;
+    }
+  }
+
+  Widget _statusPill(String status) {
+    final color = _statusColor(status);
+    final icon = _statusIcon(status);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.11),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.30), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            status.toUpperCase(),
+            style: TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.25,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _priorityBadge(String priority) {
+    final color = _priorityColor(priority);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        priority.toUpperCase(),
+        style: TextStyle(
+          fontSize: 8.5,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.3,
+          color: color,
+        ),
+      ),
+    );
+  }
+
   Widget _buildMobileTicketCard(DealerTicket ticket) {
     final isSelected = ticket.ticketId == selectedTicketId;
-    return InkWell(
-      onTap: () => onTicketSelected(ticket.ticketId),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.blue500.withValues(alpha: 0.04) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.blue500 : AppColors.line,
-            width: isSelected ? 1.5 : 1,
+    final accent = _priorityColor(ticket.priority);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onTicketSelected(ticket.ticketId),
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.blue500.withValues(alpha: 0.07) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.blue500.withValues(alpha: 0.40) : AppColors.line,
+              width: isSelected ? 1.2 : 1,
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  '#${ticket.ticketNumber}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.navy900, fontSize: 13),
+                Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                  ),
                 ),
-                _buildStatusPill(ticket.status),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              ticket.productName ?? (ticket.issueCategory.isNotEmpty ? ticket.issueCategory.first : 'Service Request'),
-              style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.navy900, fontSize: 15),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.person_outline, size: 14, color: AppColors.ink400),
-                const SizedBox(width: 6),
-                Text(ticket.customer.name, style: const TextStyle(color: AppColors.ink600, fontSize: 12)),
-                const SizedBox(width: 12),
-                const Icon(Icons.phone_android_outlined, size: 14, color: AppColors.ink400),
-                const SizedBox(width: 6),
-                Text(ticket.customer.phone, style: const TextStyle(color: AppColors.ink600, fontSize: 12)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.location_on_outlined, size: 14, color: AppColors.ink400),
-                const SizedBox(width: 6),
                 Expanded(
-                  child: Text(
-                    ticket.customer.siteLocation,
-                    style: const TextStyle(color: AppColors.ink400, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '#${ticket.ticketNumber}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  color: isSelected ? AppColors.blue500 : AppColors.navy900,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                            _statusPill(ticket.status),
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        Row(
+                          children: [
+                            _priorityBadge(ticket.priority),
+                            const SizedBox(width: 7),
+                            Expanded(
+                              child: Text(
+                                ticket.productName ?? (ticket.issueCategory.isNotEmpty ? ticket.issueCategory.first : 'Service Request'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isSelected ? AppColors.navy900 : AppColors.navy900,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(Icons.person_outline, size: 12, color: AppColors.ink400),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                ticket.customer.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.ink600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              child: Text('•', style: TextStyle(color: AppColors.ink400, fontSize: 11)),
+                            ),
+                            const Icon(Icons.location_on_outlined, size: 12, color: AppColors.ink400),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                ticket.customer.siteLocation,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.ink400,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: ticket.firstTechName == null ? const Color(0xFFF1F0FF) : AppColors.blue500.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                ticket.firstTechName == null ? Icons.person_add_alt_1_outlined : Icons.engineering_outlined,
+                                size: 12,
+                                color: const Color(0xFF6366F1),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  ticket.firstTechName ?? 'Needs Tech Assignment',
+                                  style: const TextStyle(
+                                    color: Color(0xFF6366F1),
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right, size: 14, color: AppColors.ink400),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: ticket.firstTechName != null
-                      ? Text(
-                          ticket.firstTechName!,
-                          style: const TextStyle(color: AppColors.blue500, fontWeight: FontWeight.bold, fontSize: 12),
-                        )
-                      : const Text(
-                          'Needs Tech Assignment',
-                          style: TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                ),
-                const Icon(Icons.chevron_right, color: AppColors.ink400, size: 20),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

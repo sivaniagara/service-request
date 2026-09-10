@@ -6,14 +6,12 @@ import '../../data/models/technician_ticket_model.dart';
 
 class TechnicianTicketDetailView extends StatefulWidget {
   final TechnicianTicketDetail ticket;
-  final Function(String status, {String? notes, List<String>? photos}) onStatusUpdate;
   final Function(String mode) onSupportModeChange;
   final VoidCallback onTaskComplete;
 
   const TechnicianTicketDetailView({
     super.key,
     required this.ticket,
-    required this.onStatusUpdate,
     required this.onSupportModeChange,
     required this.onTaskComplete,
   });
@@ -23,93 +21,174 @@ class TechnicianTicketDetailView extends StatefulWidget {
 }
 
 class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView> {
-  final TextEditingController _notesController = TextEditingController();
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return ListView(
+      physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.zero,
-      borderRadius: 12,
-      child: Column(
-        children: [
-          _buildHeader(),
-          const Divider(height: 1, color: AppColors.line),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Issues',
-                    style: TextStyle(
-                      color: AppColors.navy900,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  _buildTicketInfo(),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildSectionHeader('SUPPORT MODE'),
-                      if (widget.ticket.supportMode == null || widget.ticket.supportMode!.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text(
-                            '(Required)',
-                            style: TextStyle(
-                              color: AppColors.red500,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
+      children: [
+        _buildSummaryCard(),
+        const SizedBox(height: 16),
+        AppCard(
+          padding: EdgeInsets.zero,
+          borderRadius: 16,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildSectionHeader('SUPPORT MODE'),
+                    if (widget.ticket.supportMode == null || widget.ticket.supportMode!.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Text(
+                          '(Required)',
+                          style: TextStyle(
+                            color: AppColors.red500,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildModeOption('visit', 'Site Visit', Icons.location_on_outlined),
-                      const SizedBox(width: 16),
-                      _buildModeOption('remote', 'Remote Support', Icons.videocam_outlined),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Service Progress',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.navy900,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildStepper(widget.ticket.stepperMilestones),
-                  const SizedBox(height: 48),
-                  if (widget.ticket.customer != null) ...[
-                    _buildSectionHeader('CUSTOMER CONTACT'),
-                    const SizedBox(height: 16),
-                    _buildCustomerContact(),
-                    const SizedBox(height: 20),
+                      ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _buildModeOption('visit', 'Site Visit', Icons.location_on_outlined),
+                    const SizedBox(width: 16),
+                    _buildModeOption('remote', 'Remote Support', Icons.videocam_outlined),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                const Text(
+                  'Service Progress',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.navy900,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildStepper(widget.ticket.stepperMilestones),
+                const SizedBox(height: 48),
+                if (widget.ticket.customer != null) ...[
+                  _buildSectionHeader('CUSTOMER CONTACT'),
                   const SizedBox(height: 16),
-                  _buildClosureSection(),
-                  const SizedBox(height: 16),
-                  _buildSectionHeader('TIMELINE LOG'),
-                  const SizedBox(height: 16),
-                  _buildTimeline(widget.ticket.timelineEvents),
-
+                  _buildCustomerContact(),
+                  const SizedBox(height: 20),
                 ],
-              ),
+                _buildClosureSection(),
+                const SizedBox(height: 32),
+                _buildSectionHeader('TIMELINE LOG'),
+                const SizedBox(height: 16),
+                _buildTimeline(widget.ticket.timelineEvents),
+              ],
             ),
           ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    final total = widget.ticket.stepperMilestones.length;
+    final done = widget.ticket.stepperMilestones.where((m) => m.status == 'done' || m.status == 'completed').length;
+    final progress = total > 0 ? done / total : 0.0;
+
+    return AppCard(
+      padding: const EdgeInsets.all(24),
+      borderRadius: 16,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.ticket.title ?? 'Service Request',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.navy900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Assigned on ${widget.ticket.createdAt}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.ink400,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              StatusPill.ticketStatus(widget.ticket.status),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (widget.ticket.description != null && widget.ticket.description!.isNotEmpty) ...[
+            Text(
+              widget.ticket.description!,
+              style: const TextStyle(
+                color: AppColors.ink600,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          _buildTicketInfo(),
+          if (total > 0) ...[
+            const SizedBox(height: 24),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Task Completion',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.ink400,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    Text(
+                      '$done/$total steps',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.navy900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: AppColors.line,
+                    valueColor: const AlwaysStoppedAnimation(AppColors.amber500),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -123,40 +202,6 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
         fontWeight: FontWeight.w900,
         color: AppColors.ink400,
         letterSpacing: 0.8,
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '#${widget.ticket.ticketNumber}',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.navy900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Assigned on ${widget.ticket.createdAt}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.ink400,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          StatusPill.ticketStatus(widget.ticket.status),
-        ],
       ),
     );
   }
@@ -251,15 +296,13 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
   }
 
   Widget _buildStepper(List<TicketMilestone> milestones) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: milestones.length,
-      itemBuilder: (context, index) {
-        final m = milestones[index];
+    return Column(
+      children: milestones.asMap().entries.map((entry) {
+        final index = entry.key;
+        final m = entry.value;
         final isCompleted = m.status == 'done' || m.status == 'completed';
         final isCurrent = m.status == 'current';
-        
+
         return IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +375,7 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
             ],
           ),
         );
-      },
+      }).toList(),
     );
   }
 
@@ -406,12 +449,8 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
   }
 
   Widget _buildTimeline(List<TicketTimelineEvent> events) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
+    return Column(
+      children: events.map((event) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Row(
@@ -463,84 +502,41 @@ class _TechnicianTicketDetailViewState extends State<TechnicianTicketDetailView>
             ],
           ),
         );
-      },
+      }).toList(),
     );
   }
 
   Widget _buildClosureSection() {
+    final canAct = widget.ticket.supportMode != null && widget.ticket.supportMode!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // const Text(
-        //   'Close Out Job',
-        //   style: TextStyle(
-        //     fontSize: 18,
-        //     fontWeight: FontWeight.w900,
-        //     color: AppColors.navy900,
-        //   ),
-        // ),
-        // const SizedBox(height: 24),
-        // _buildSectionHeader('DIAGNOSIS NOTES'),
-        // const SizedBox(height: 12),
-        // TextField(
-        //   controller: _notesController,
-        //   maxLines: 4,
-        //   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        //   decoration: InputDecoration(
-        //     hintText: 'Describe root cause and resolution...',
-        //     hintStyle: const TextStyle(color: AppColors.ink400, fontWeight: FontWeight.w400),
-        //     fillColor: Colors.white,
-        //     border: OutlineInputBorder(
-        //       borderRadius: BorderRadius.circular(12),
-        //       borderSide: const BorderSide(color: AppColors.line),
-        //     ),
-        //   ),
-        // ),
-        // const SizedBox(height: 24),
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //   children: [
-        //     _buildSectionHeader('WORK PROOF'),
-        //     TextButton.icon(
-        //       onPressed: () {},
-        //       icon: const Icon(Icons.add_a_photo, size: 16),
-        //       label: const Text('Add Photo', style: TextStyle(fontWeight: FontWeight.w900)),
-        //     ),
-        //   ],
-        // ),
-        // const SizedBox(height: 12),
-        // Wrap(
-        //   spacing: 12,
-        //   children: [
-        //     ...widget.ticket.attachedPhotos.map((url) => _buildPhotoPlaceholder()),
-        //     _buildAddPhotoPlaceholder(),
-        //   ],
-        // ),
-        // const SizedBox(height: 40),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: (widget.ticket.supportMode == null || widget.ticket.supportMode!.isEmpty)
-                    ? null
-                    : widget.onTaskComplete,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.blue500,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.line,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Complete Technician Task',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-                ),
-              ),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: canAct ? widget.onTaskComplete : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.blue500,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.line,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
             ),
-            const SizedBox(width: 12),
-          ],
+            child: const Text(
+              'Complete My Task',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            ),
+          ),
         ),
+        if (!canAct) ...[
+          const SizedBox(height: 12),
+          const Text(
+            'Select a support mode above before completing this ticket.',
+            style: TextStyle(color: AppColors.red500, fontSize: 11.5, fontWeight: FontWeight.w600),
+          ),
+        ],
       ],
     );
   }

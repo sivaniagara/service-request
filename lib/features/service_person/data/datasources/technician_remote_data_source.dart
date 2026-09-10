@@ -10,8 +10,6 @@ abstract class TechnicianRemoteDataSource {
   Future<TechnicianReportData> getTechnicianReports();
   Future<List<TechnicianHistoryItem>> getTechnicianHistory();
   Future<void> updateSupportMode(String ticketId, String supportMode);
-  Future<void> updateTicketStatus(String ticketId, String status, String supportMode);
-  Future<void> resolveTicket(String ticketId, String notes, List<String> photos);
   Future<Map<String, dynamic>> completeTechnicianTask(String ticketId, String notes);
 }
 
@@ -55,29 +53,6 @@ class TechnicianRemoteDataSourceImpl implements TechnicianRemoteDataSource {
     await httpService.patch(
       "/api/technician/tickets/$ticketId/mode",
       body: {"supportMode": supportMode},
-    );
-  }
-
-  @override
-  Future<void> updateTicketStatus(String ticketId, String status, String supportMode) async {
-    await httpService.patch(
-      "/api/technician/tickets/$ticketId/status",
-      body: {
-        "status": status,
-        "supportMode": supportMode,
-      },
-    );
-  }
-
-  @override
-  Future<void> resolveTicket(String ticketId, String notes, List<String> photos) async {
-    await httpService.post(
-      "/api/technician/tickets/$ticketId/resolve",
-      body: {
-        "notes": notes,
-        "photos": photos,
-        "partsReplaced": [], // Optional, default to empty
-      },
     );
   }
 

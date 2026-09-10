@@ -13,13 +13,11 @@ import 'technician_ticket_list_sidebar.dart';
 import '../pages/technician_ticket_detail_page.dart';
 
 class TechnicianMobileDashboard extends StatelessWidget {
-  final Function(String ticketId, String status, {String? notes, List<String>? photos}) onStatusUpdate;
   final Function(String ticketId, String mode) onSupportModeChange;
   final Function(String ticketId) onTaskComplete;
 
   const TechnicianMobileDashboard({
     super.key,
-    required this.onStatusUpdate,
     required this.onSupportModeChange,
     required this.onTaskComplete,
   });
@@ -110,15 +108,17 @@ class TechnicianMobileDashboard extends StatelessWidget {
       onViewTicket: (id) async {
         final cubit = context.read<TechnicianDashboardCubit>();
         await cubit.loadTicketDetail(id);
-        if (context.mounted && cubit.state.selectedTicketDetail != null) {
+        if (context.mounted) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => TechnicianTicketDetailPage(
-                ticket: cubit.state.selectedTicketDetail!,
-                onStatusUpdate: (status, {notes, photos}) => onStatusUpdate(id, status, notes: notes, photos: photos),
-                onSupportModeChange: (mode) => onSupportModeChange(id, mode),
-                onTaskComplete: () => onTaskComplete(id),
+              builder: (_) => BlocProvider.value(
+                value: cubit,
+                child: TechnicianTicketDetailPage(
+                  ticketId: id,
+                  onSupportModeChange: (mode) => onSupportModeChange(id, mode),
+                  onTaskComplete: () => onTaskComplete(id),
+                ),
               ),
             ),
           );
@@ -136,15 +136,17 @@ class TechnicianMobileDashboard extends StatelessWidget {
         onTicketSelected: (id) async {
           final cubit = context.read<TechnicianDashboardCubit>();
           await cubit.loadTicketDetail(id);
-          if (context.mounted && cubit.state.selectedTicketDetail != null) {
+          if (context.mounted) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => TechnicianTicketDetailPage(
-                  ticket: cubit.state.selectedTicketDetail!,
-                  onStatusUpdate: (status, {notes, photos}) => onStatusUpdate(id, status, notes: notes, photos: photos),
-                  onSupportModeChange: (mode) => onSupportModeChange(id, mode),
-                  onTaskComplete: () => onTaskComplete(id),
+                builder: (_) => BlocProvider.value(
+                  value: cubit,
+                  child: TechnicianTicketDetailPage(
+                    ticketId: id,
+                    onSupportModeChange: (mode) => onSupportModeChange(id, mode),
+                    onTaskComplete: () => onTaskComplete(id),
+                  ),
                 ),
               ),
             );

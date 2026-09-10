@@ -10,7 +10,6 @@ import 'technician_ticket_detail_view.dart';
 class TechnicianServiceRequestsView extends StatefulWidget {
   final List<TechnicianTicket> tickets;
   final String initialTicketId;
-  final Function(String ticketId, String status, {String? notes, List<String>? photos}) onStatusUpdate;
   final Function(String ticketId, String mode) onSupportModeChange;
   final Function(String ticketId) onTaskComplete;
 
@@ -18,7 +17,6 @@ class TechnicianServiceRequestsView extends StatefulWidget {
     super.key,
     required this.tickets,
     this.initialTicketId = '',
-    required this.onStatusUpdate,
     required this.onSupportModeChange,
     required this.onTaskComplete,
   });
@@ -89,22 +87,20 @@ class _TechnicianServiceRequestsViewState extends State<TechnicianServiceRequest
   }
 
   Widget _buildDetailContent(TechnicianDashboardState state) {
-    if (state.isDetailLoading) {
+    final ticket = state.selectedTicketDetail;
+
+    // If we are loading and don't have a ticket yet, OR if we are loading a DIFFERENT ticket
+    if (state.isDetailLoading && (ticket == null || ticket.ticketId != _selectedTicketId)) {
       return const AppCard(child: Center(child: CircularProgressIndicator()));
     }
 
-    if (state.selectedTicketDetail == null) {
+    if (ticket == null) {
       return const AppCard(child: Center(child: Text('Select a ticket to view details')));
     }
 
-    // Ensure we are showing details for the selected ticket
-    if (state.selectedTicketDetail!.ticketId != _selectedTicketId) {
-      return const AppCard(child: Center(child: CircularProgressIndicator()));
-    }
-
+    // Ensure we show the detail view even if isDetailLoading is true (refreshing)
     return TechnicianTicketDetailView(
-      ticket: state.selectedTicketDetail!,
-      onStatusUpdate: (status, {notes, photos}) => widget.onStatusUpdate(_selectedTicketId, status, notes: notes, photos: photos),
+      ticket: ticket,
       onSupportModeChange: (mode) => widget.onSupportModeChange(_selectedTicketId, mode),
       onTaskComplete: () => widget.onTaskComplete(_selectedTicketId),
     );
